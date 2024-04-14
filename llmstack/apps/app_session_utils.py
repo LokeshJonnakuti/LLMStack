@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime
-from django.conf import settings
-from django.core.cache import caches
 
 import orjson as json
+from django.conf import settings
+from django.core.cache import caches
 
 APP_SESSION_TIMEOUT = settings.APP_SESSION_TIMEOUT
 
@@ -49,7 +49,8 @@ def create_app_session_data(app_session, endpoint, data):
     }
     app_session_data_store.set(
         f'app_session_data_{app_session["uuid"]}_{endpoint_id}', json.dumps(
-            app_session_data), APP_SESSION_TIMEOUT,
+            app_session_data,
+        ), APP_SESSION_TIMEOUT,
     )
     return app_session_data
 
@@ -57,7 +58,8 @@ def create_app_session_data(app_session, endpoint, data):
 def save_app_session_data(app_session_data):
     app_session_data_store.set(
         f'app_session_data_{app_session_data["app_session"]["uuid"]}_{app_session_data["endpoint"]}', json.dumps(
-            app_session_data), APP_SESSION_TIMEOUT,
+            app_session_data,
+        ), APP_SESSION_TIMEOUT,
     )
     return app_session_data
 

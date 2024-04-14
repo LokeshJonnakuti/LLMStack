@@ -5,35 +5,39 @@ import uuid
 from collections import namedtuple
 
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
+from django.contrib.auth import login
+from django.contrib.auth import logout
 from django.db.models import Max
-from django.http import (
-    Http404,
-    HttpResponseForbidden,
-    HttpResponseNotFound,
-    StreamingHttpResponse,
-)
+from django.http import Http404
+from django.http import HttpResponseForbidden
+from django.http import HttpResponseNotFound
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from flags.state import flag_enabled
-from rest_framework import status, viewsets
+from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response as DRFResponse
 from rest_framework.views import APIView
 
+from .models import Endpoint
+from .models import RunEntry
+from .providers.api_processors import ApiProcessorFactory
+from .serializers import HistorySerializer
+from .serializers import LoginSerializer
 from llmstack.apps.app_session_utils import create_app_session
 from llmstack.base.models import Profile
 from llmstack.play.actor import ActorConfig
 from llmstack.play.actors.bookkeeping import BookKeepingActor
-from llmstack.play.actors.input import InputActor, InputRequest
+from llmstack.play.actors.input import InputActor
+from llmstack.play.actors.input import InputRequest
 from llmstack.play.actors.output import OutputActor
 from llmstack.play.coordinator import Coordinator
 from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
-
-from .models import Endpoint, RunEntry
-from .providers.api_processors import ApiProcessorFactory
-from .serializers import HistorySerializer, LoginSerializer
 
 Schema = namedtuple('Schema', 'type default is_required')
 
@@ -208,7 +212,8 @@ class EndpointViewSet(viewsets.ViewSet):
 
         # Pick a processor
         processor_cls = ApiProcessorFactory.get_api_processor(
-            api_backend_slug, api_provider_slug)
+            api_backend_slug, api_provider_slug,
+        )
 
         if not app_session:
             app_session = create_app_session(None, str(uuid.uuid4()))
@@ -294,12 +299,21 @@ class ApiProviderViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
     def list(self, request):
-        processor_providers = list(filter(lambda provider: provider.get(
-            'processor_packages'), settings.PROVIDERS))
-        data = list(map(lambda provider: {
-            'name': provider.get('name'),
-            'slug': provider.get('slug'),
-        }, processor_providers))
+        processor_providers = list(
+            filter(
+                lambda provider: provider.get(
+                'processor_packages',
+                ), settings.PROVIDERS,
+            ),
+        )
+        data = list(
+            map(
+                lambda provider: {
+                    'name': provider.get('name'),
+                    'slug': provider.get('slug'),
+                }, processor_providers,
+            ),
+        )
 
         return DRFResponse(data)
 
@@ -333,7 +347,7 @@ class ApiBackendViewSet(viewsets.ViewSet):
                 processor_name = subclass.slug().capitalize()
 
             processors.append({
-                'id': f"{subclass.provider_slug()}/{subclass.slug()}",
+                'id': f'{subclass.provider_slug()}/{subclass.slug()}',
                 'name': processor_name,
                 'slug': subclass.slug(),
                 'api_provider': providers_map[subclass.provider_slug()],
@@ -378,8 +392,11 @@ class HistoryViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(queryset)
         if page is not None:
             response = self.get_paginated_response(
-                HistorySerializer(page, many=True, context={
-                                  'hide_details': not detail}).data,
+                HistorySerializer(
+                    page, many=True, context={
+                    'hide_details': not detail,
+                    },
+                ).data,
             )
         else:
             response = HistorySerializer(
@@ -391,15 +408,22 @@ class HistoryViewSet(viewsets.ModelViewSet):
     def get_csv(self, queryset, brief):
         header = ['Created At', 'Session', 'Request', 'Response']
         if not brief:
-            header.extend(['Request UUID', 'Request User Email', 'Request IP',
-                          'Request Location', 'Request User Agent', 'Request Content Type'])
+            header.extend([
+                'Request UUID', 'Request User Email', 'Request IP',
+                'Request Location', 'Request User Agent', 'Request Content Type',
+            ])
         yield ','.join(header) + '\n'
         for entry in queryset:
-            output = [entry.created_at.strftime('%Y-%m-%d %H:%M:%S'), entry.session_key if entry.session_key else '', json.dumps(
-                entry.request_body), json.dumps(entry.response_body)]
+            output = [
+                entry.created_at.strftime('%Y-%m-%d %H:%M:%S'), entry.session_key if entry.session_key else '', json.dumps(
+                entry.request_body,
+                ), json.dumps(entry.response_body),
+            ]
             if not brief:
-                output.extend([entry.request_uuid, entry.request_user_email, entry.request_ip,
-                               entry.request_location, entry.request_user_agent, entry.request_content_type])
+                output.extend([
+                    entry.request_uuid, entry.request_user_email, entry.request_ip,
+                    entry.request_location, entry.request_user_agent, entry.request_content_type,
+                ])
             yield ','.join(output) + '\n'
 
     def download(self, request):
@@ -415,7 +439,8 @@ class HistoryViewSet(viewsets.ModelViewSet):
             count = 100
 
         queryset = RunEntry.objects.all().filter(
-            app_uuid=app_uuid, owner=request.user, created_at__lt=before).order_by('-created_at')[:count]
+            app_uuid=app_uuid, owner=request.user, created_at__lt=before,
+        ).order_by('-created_at')[:count]
         response = StreamingHttpResponse(
             streaming_content=self.get_csv(queryset, brief), content_type='text/csv',
         )

@@ -3,6 +3,8 @@ import re
 import uuid
 
 import requests
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import User
 
 from llmstack.apps.handlers.app_runnner import AppRunner
 from llmstack.play.actor import ActorConfig
@@ -11,8 +13,6 @@ from llmstack.play.actors.input import InputActor
 from llmstack.play.actors.output import OutputActor
 from llmstack.play.utils import convert_template_vars_from_legacy_format
 from llmstack.processors.providers.slack.post_message import SlackPostMessageProcessor
-
-from django.contrib.auth.models import User, AnonymousUser
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,8 @@ class SlackAppRunner(AppRunner):
                     return user_object if user_object is not None else AnonymousUser()
             except Exception as e:
                 logger.exception(
-                    f"Error in fetching user object from slack payload {slack_request_payload}")
+                    f'Error in fetching user object from slack payload {slack_request_payload}',
+                )
 
         return AnonymousUser()
 
@@ -115,7 +116,8 @@ class SlackAppRunner(AppRunner):
     def _get_slack_processor_actor_configs(self, input_data):
         output_template = convert_template_vars_from_legacy_format(
             self.app_data['output_template'].get(
-                'markdown', '') if self.app_data and 'output_template' in self.app_data else self.app.output_template.get('markdown', ''),
+                'markdown', '',
+            ) if self.app_data and 'output_template' in self.app_data else self.app.output_template.get('markdown', ''),
         )
         vendor_env = self.app_owner_profile.get_vendor_env()
 
@@ -182,7 +184,8 @@ class SlackAppRunner(AppRunner):
         else:
             template = convert_template_vars_from_legacy_format(
                 self.app_data['output_template'].get(
-                    'markdown', '') if self.app_data and 'output_template' in self.app_data else self.app.output_template.get('markdown', ''),
+                    'markdown', '',
+                ) if self.app_data and 'output_template' in self.app_data else self.app.output_template.get('markdown', ''),
             )
             actor_configs = [
                 ActorConfig(

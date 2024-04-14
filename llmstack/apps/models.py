@@ -9,10 +9,13 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.timezone import now
 
-from llmstack.apps.integration_configs import DiscordIntegrationConfig, SlackIntegrationConfig, TwilioIntegrationConfig, WebIntegrationConfig
-from llmstack.processors.models import Endpoint
+from llmstack.apps.integration_configs import DiscordIntegrationConfig
+from llmstack.apps.integration_configs import SlackIntegrationConfig
+from llmstack.apps.integration_configs import TwilioIntegrationConfig
+from llmstack.apps.integration_configs import WebIntegrationConfig
 from llmstack.base.models import Profile
 from llmstack.common.utils.db_models import ArrayField
+from llmstack.processors.models import Endpoint
 
 logger = logging.getLogger(__name__)
 
@@ -237,7 +240,7 @@ class App(models.Model):
     def discord_config(self):
         profile = Profile.objects.get(user=self.owner)
         return DiscordIntegrationConfig().from_dict(self.discord_integration_config, profile.decrypt_value) if self.discord_integration_config else None
-    
+
     @property
     def twilio_config(self):
         profile = Profile.objects.get(user=self.owner)

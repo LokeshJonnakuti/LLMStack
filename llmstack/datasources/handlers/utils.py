@@ -1,7 +1,7 @@
 from llmstack.common.blocks.data.store.vectorstore import Document
 from llmstack.common.utils.splitter import CSVTextSplitter
-from llmstack.common.utils.text_extract import extract_text_elements
 from llmstack.common.utils.splitter import SpacyTextSplitter
+from llmstack.common.utils.text_extract import extract_text_elements
 
 
 def extract_documents(file_data, content_key, mime_type, file_name, metadata, chunk_size=1500):

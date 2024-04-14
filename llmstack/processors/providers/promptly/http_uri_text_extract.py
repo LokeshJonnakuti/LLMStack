@@ -6,11 +6,14 @@ from asgiref.sync import async_to_sync
 from pydantic import conint
 from pydantic import Field
 
-from llmstack.common.blocks.data.store.vectorstore import Document, DocumentQuery
+from llmstack.common.blocks.data.store.vectorstore import Document
+from llmstack.common.blocks.data.store.vectorstore import DocumentQuery
 from llmstack.common.blocks.data.store.vectorstore.chroma import Chroma
-from llmstack.common.utils.text_extract import extract_text_from_url, ExtraParams
 from llmstack.common.utils.splitter import SpacyTextSplitter
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.common.utils.text_extract import extract_text_from_url
+from llmstack.common.utils.text_extract import ExtraParams
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +91,8 @@ class HttpUriTextExtract(ApiProcessorInterface[HttpUriTextExtractorInput, HttpUr
         if query and self.storage_index_name and url == self.url:
             documents: List[Document] = self.temp_store.hybrid_search(
                 self.storage_index_name, document_query=DocumentQuery(
-                    query=query, limit=self._config.document_limit),
+                    query=query, limit=self._config.document_limit,
+                ),
             )
             for document in documents:
                 async_to_sync(self._output_stream.write)(
@@ -112,12 +116,16 @@ class HttpUriTextExtract(ApiProcessorInterface[HttpUriTextExtractorInput, HttpUr
             self.storage_index_name = index_name
             for text_chunk in SpacyTextSplitter(separator='\n', chunk_size=self._config.text_chunk_size).split_text(text):
                 self.temp_store.add_text(
-                    index_name, Document(page_content_key="content", page_content=text_chunk, metadata={
-                                         'source': self.url}),
+                    index_name, Document(
+                        page_content_key='content', page_content=text_chunk, metadata={
+                        'source': self.url,
+                        },
+                    ),
                 )
             documents: List[Document] = self.temp_store.hybrid_search(
                 self.storage_index_name, document_query=DocumentQuery(
-                    query=query, limit=self._config.document_limit),
+                    query=query, limit=self._config.document_limit,
+                ),
             )
 
             for document in documents:

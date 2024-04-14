@@ -6,9 +6,14 @@ from typing import Optional
 
 from asgiref.sync import async_to_sync
 
-from llmstack.common.blocks.http import BearerTokenAuth, HttpAPIProcessor, HttpAPIProcessorInput, HttpMethod, JsonBody
+from llmstack.common.blocks.http import BearerTokenAuth
+from llmstack.common.blocks.http import HttpAPIProcessor
+from llmstack.common.blocks.http import HttpAPIProcessorInput
+from llmstack.common.blocks.http import HttpMethod
+from llmstack.common.blocks.http import JsonBody
 from llmstack.play.actor import BookKeepingData
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 
 logger = logging.getLogger(__name__)
@@ -66,7 +71,7 @@ class DiscordSendMessageProcessor(
         return 'discord'
 
     def _send_message(self, app_id: str, message: str, token: str) -> None:
-        url = f"https://discord.com/api/v10/webhooks/{app_id}/{token}"
+        url = f'https://discord.com/api/v10/webhooks/{app_id}/{token}'
         http_processor = HttpAPIProcessor(configuration={'timeout': 60})
         response = http_processor.process(
             HttpAPIProcessorInput(
@@ -87,7 +92,8 @@ class DiscordSendMessageProcessor(
         _env = self._env
         input = self._input.dict()
         response = self._send_message(
-            input['app_id'], input['text'], input['token'])
+            input['app_id'], input['text'], input['token'],
+        )
 
         async_to_sync(self._output_stream.write)(
             DiscordSendMessageOutput(code=200),
@@ -99,7 +105,8 @@ class DiscordSendMessageProcessor(
         input = self._input.dict()
         logger.error(f'Error in DiscordSendMessageProcessor: {error}')
         error_msg = '\n'.join(error.values()) if isinstance(
-            error, dict) else 'Error in processing request'
+            error, dict,
+        ) else 'Error in processing request'
 
         self._send_message(input['app_id'], error_msg, input['token'])
 

@@ -1,9 +1,9 @@
 import logging
-import uuid
 import time
+import uuid
+from concurrent.futures import Future
 
 from django.shortcuts import get_object_or_404
-from concurrent.futures import Future
 from rest_framework import viewsets
 from rest_framework.response import Response as DRFResponse
 from rq.job import Job
@@ -15,10 +15,15 @@ from .models import DataSourceType
 from .serializers import DataSourceEntrySerializer
 from .serializers import DataSourceSerializer
 from .serializers import DataSourceTypeSerializer
-from llmstack.apps.tasks import add_data_entry_task, extract_urls_task, resync_data_entry_task, delete_data_entry_task, delete_data_source_task
+from llmstack.apps.tasks import add_data_entry_task
+from llmstack.apps.tasks import delete_data_entry_task
+from llmstack.apps.tasks import delete_data_source_task
+from llmstack.apps.tasks import extract_urls_task
+from llmstack.apps.tasks import resync_data_entry_task
 from llmstack.datasources.handlers.datasource_processor import DataSourceProcessor
 from llmstack.datasources.types import DataSourceTypeFactory
-from llmstack.jobs.adhoc import DataSourceEntryProcessingJob, ExtractURLJob
+from llmstack.jobs.adhoc import DataSourceEntryProcessingJob
+from llmstack.jobs.adhoc import ExtractURLJob
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +54,7 @@ class DataSourceEntryViewSet(viewsets.ModelViewSet):
             datasource__in=datasources,
         )
         return DRFResponse(DataSourceEntrySerializer(instance=datasource_entries, many=True).data)
-    
+
     def multiGet(self, request, uids):
         datasource_entries = DataSourceEntry.objects.filter(uuid__in=uids)
         return DRFResponse(DataSourceEntrySerializer(instance=datasource_entries, many=True).data)
@@ -133,7 +138,8 @@ class DataSourceViewSet(viewsets.ModelViewSet):
         # If this is an external data source, then we need to save the config in datasource object
         if datasource_type.is_external_datasource:
             datasource_type_cls = DataSourceTypeFactory.get_datasource_type_handler(
-                datasource.type)
+                datasource.type,
+            )
             if not datasource_type_cls:
                 logger.error(
                     'No handler found for data source type {datasource.type}',
@@ -141,13 +147,16 @@ class DataSourceViewSet(viewsets.ModelViewSet):
                 return DRFResponse({'errors': ['No handler found for data source type']}, status=400)
 
             datasource_handler: DataSourceProcessor = datasource_type_cls(
-                datasource)
+                datasource,
+            )
             if not datasource_handler:
                 logger.error(
-                    f'Error while creating handler for data source {datasource.name}')
+                    f'Error while creating handler for data source {datasource.name}',
+                )
                 return DRFResponse({'errors': ['Error while creating handler for data source type']}, status=400)
             config = datasource_type_cls.process_validate_config(
-                request.data['config'], datasource)
+                request.data['config'], datasource,
+            )
             datasource.config = config
 
         datasource.save()
@@ -217,8 +226,13 @@ class DataSourceViewSet(viewsets.ModelViewSet):
             )
             datasource_entry_object.save()
             processed_datasource_entry_items.append(
-                datasource_entry_item.copy(update={'uuid': str(
-                    datasource_entry_object.uuid), 'metadata': entry_metadata}),
+                datasource_entry_item.copy(
+                    update={
+                        'uuid': str(
+                        datasource_entry_object.uuid,
+                        ), 'metadata': entry_metadata,
+                    },
+                ),
             )
 
         # Trigger a task to process the data source entry
@@ -244,11 +258,11 @@ class DataSourceViewSet(viewsets.ModelViewSet):
         if not url.startswith('https://') and not url.startswith('http://'):
             url = f'https://{url}'
 
-        logger.info("Staring job to extract urls")
+        logger.info('Staring job to extract urls')
 
         job = ExtractURLJob.create(
             func=extract_urls_task, args=[
-                url
+                url,
             ],
         ).add_to_queue()
 

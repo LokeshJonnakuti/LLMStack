@@ -9,9 +9,11 @@ from jinja2 import Template
 from openai import OpenAI
 from pydantic import BaseModel
 
-from llmstack.play.actor import Actor, BookKeepingData
+from llmstack.play.actor import Actor
+from llmstack.play.actor import BookKeepingData
 from llmstack.play.actors.output import OutputResponse
-from llmstack.play.output_stream import Message, MessageType
+from llmstack.play.output_stream import Message
+from llmstack.play.output_stream import MessageType
 
 logger = logging.getLogger(__name__)
 
@@ -56,21 +58,24 @@ class AgentActor(Actor):
         self._config = kwargs.get('config', {})
 
         self._openai_client = OpenAI(
-            api_key=self._env['openai_api_key']
+            api_key=self._env['openai_api_key'],
         )
 
-        self._agent_messages = [{
-            'role': 'system',
-            'content': self._config.get('system_message', 'You are a helpful assistant that uses provided tools to perform actions.')
-        }, {
-            'role': 'user',
-            'content': self._input.get('task', 'Hello')
-        }]
+        self._agent_messages = [
+            {
+                'role': 'system',
+                'content': self._config.get('system_message', 'You are a helpful assistant that uses provided tools to perform actions.'),
+            }, {
+                'role': 'user',
+                'content': self._input.get('task', 'Hello'),
+            },
+        ]
 
     # This will send a message to itself to start the loop
     def run(self) -> None:
         self.actor_ref.tell(
-            Message(message_type=MessageType.BEGIN, message=None, message_to=self._id))
+            Message(message_type=MessageType.BEGIN, message=None, message_to=self._id),
+        )
 
     def _on_error(self, message) -> None:
         async_to_sync(self._output_stream.write)(
@@ -79,7 +84,7 @@ class AgentActor(Actor):
                 from_id=message.message_from,
                 id=message.message_id or str(uuid.uuid4()),
                 type='step_error',
-            )
+            ),
         )
         output_response = OutputResponse(
             response_content_type='text/markdown',
@@ -95,7 +100,7 @@ class AgentActor(Actor):
             Message(
                 message_type=MessageType.AGENT_DONE,
                 message_from='agent',
-            )
+            ),
         )
 
     def on_receive(self, message: Message) -> Any:
@@ -117,7 +122,7 @@ class AgentActor(Actor):
                 Message(
                     message_type=MessageType.AGENT_DONE,
                     message_from='agent',
-                )
+                ),
             )
             return
 
@@ -161,7 +166,7 @@ class AgentActor(Actor):
                                 id=agent_message_id,
                                 from_id='agent',
                                 type='step',
-                            )
+                            ),
                         )
                     elif function_call and function_call.arguments:
                         function_args += function_call.arguments
@@ -173,7 +178,7 @@ class AgentActor(Actor):
                                 id=agent_message_id,
                                 from_id='agent',
                                 type='step',
-                            )
+                            ),
                         )
                     elif content:
                         full_content += content
@@ -183,19 +188,20 @@ class AgentActor(Actor):
                                 id=agent_message_id,
                                 from_id='agent',
                                 type='output',
-                            )
+                            ),
                         )
 
             if function_name and finish_reason == 'function_call':
                 logger.info(
-                    f'Agent function call: {function_name}({function_args})')
+                    f'Agent function call: {function_name}({function_args})',
+                )
 
                 self._agent_messages.append({
                     'role': 'assistant',
                     'content': None,
                     'function_call': {
                         'name': function_name,
-                        'arguments': function_args
+                        'arguments': function_args,
                     },
                 })
 
@@ -211,14 +217,16 @@ class AgentActor(Actor):
                             message=tool_invoke_input,
                             message_to=function_name,
                             message_from=self._id,
-                        )
+                        ),
                     )
                 except Exception as e:
                     logger.error(f'Error invoking tool {function_name}: {e}')
-                    self._on_error(Message(
-                        message_from='agent',
-                        message=f'Error invoking tool {function_name}: {e}',
-                    ))
+                    self._on_error(
+                        Message(
+                            message_from='agent',
+                            message=f'Error invoking tool {function_name}: {e}',
+                        ),
+                    )
             elif full_content and finish_reason == 'stop':
                 output_response = OutputResponse(
                     response_content_type='text/markdown',
@@ -235,12 +243,13 @@ class AgentActor(Actor):
                     Message(
                         message_type=MessageType.AGENT_DONE,
                         message_from='agent',
-                    )
+                    ),
                 )
 
         if message.message_type == MessageType.STREAM_DATA:
             processor_template = self._processor_configs[
-                message.message_from]['processor']['output_template']
+                message.message_from
+            ]['processor']['output_template']
 
             if message.message_from in self._processor_configs:
                 async_to_sync(self._output_stream.write)(
@@ -251,26 +260,29 @@ class AgentActor(Actor):
                         from_id=message.message_from,
                         id=message.response_to,
                         type='step',
-                    )
+                    ),
                 )
 
         if message.message_type == MessageType.STREAM_CLOSED:
             # Get the output from the processor invoke and resume the loop
             try:
                 processor_template = self._processor_configs[
-                    message.message_from]['processor']['output_template']
+                    message.message_from
+                ]['processor']['output_template']
 
                 processor_output = Template(processor_template['markdown']).render(
-                    **{message.message_from: message.message})
+                    **{message.message_from: message.message},
+                )
 
                 self._agent_messages.append({
                     'role': 'function',
                     'content': processor_output,
-                    'name': message.message_from
+                    'name': message.message_from,
                 })
 
                 self.actor_ref.tell(
-                    Message(message_type=MessageType.BEGIN, message=None, message_to=self._id))
+                    Message(message_type=MessageType.BEGIN, message=None, message_to=self._id),
+                )
             except Exception as e:
                 logger.error(f'Error getting tool output: {e}')
 

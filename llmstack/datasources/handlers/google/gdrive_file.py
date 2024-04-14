@@ -4,15 +4,18 @@ from typing import Optional
 
 from pydantic import Field
 
+from llmstack.base.models import Profile
 from llmstack.common.blocks.data.store.vectorstore import Document
 from llmstack.common.utils.splitter import CSVTextSplitter
+from llmstack.common.utils.splitter import SpacyTextSplitter
 from llmstack.common.utils.text_extract import extract_text_from_b64_json
 from llmstack.common.utils.text_extract import ExtraParams
-from llmstack.common.utils.splitter import SpacyTextSplitter
 from llmstack.common.utils.utils import validate_parse_data_uri
-from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem, DataSourceSchema, DataSourceProcessor, WEAVIATE_SCHEMA
+from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem
+from llmstack.datasources.handlers.datasource_processor import DataSourceProcessor
+from llmstack.datasources.handlers.datasource_processor import DataSourceSchema
+from llmstack.datasources.handlers.datasource_processor import WEAVIATE_SCHEMA
 from llmstack.datasources.models import DataSource
-from llmstack.base.models import Profile
 
 
 logger = logging.getLogger(__name__)
@@ -79,8 +82,10 @@ class GdriveFileDataSource(DataSourceProcessor[GdriveFileSchema]):
         mime_type, file_name, file_data = validate_parse_data_uri(entry.file)
 
         data_source_entry = DataSourceEntryItem(
-            name=file_name, data={'mime_type': mime_type,
-                                  'file_name': file_name, 'file_data': file_data},
+            name=file_name, data={
+                'mime_type': mime_type,
+                'file_name': file_name, 'file_data': file_data,
+            },
         )
 
         return [data_source_entry]

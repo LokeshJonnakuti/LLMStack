@@ -1,6 +1,7 @@
 import unittest
 
-from llmstack.common.utils.splitter import CSVTextSplitter, SpacyTextSplitter
+from llmstack.common.utils.splitter import CSVTextSplitter
+from llmstack.common.utils.splitter import SpacyTextSplitter
 
 
 class TestSplitter(unittest.TestCase):
