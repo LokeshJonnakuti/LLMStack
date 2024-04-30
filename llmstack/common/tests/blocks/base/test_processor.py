@@ -1,7 +1,15 @@
 import unittest
+
 from pydantic import BaseModel
 
-from llmstack.common.blocks.base.processor import BaseProcessor, BaseConfiguration, BaseConfigurationType, BaseInput, BaseInputType, BaseOutput, BaseOutputType, ProcessorInterface
+from llmstack.common.blocks.base.processor import BaseConfiguration
+from llmstack.common.blocks.base.processor import BaseConfigurationType
+from llmstack.common.blocks.base.processor import BaseInput
+from llmstack.common.blocks.base.processor import BaseInputType
+from llmstack.common.blocks.base.processor import BaseOutput
+from llmstack.common.blocks.base.processor import BaseOutputType
+from llmstack.common.blocks.base.processor import BaseProcessor
+from llmstack.common.blocks.base.processor import ProcessorInterface
 
 
 class TestInputModel(BaseModel):
@@ -51,20 +59,28 @@ class TestProcessorTestCase(unittest.TestCase):
         self.assertEqual(TestProcessor.get_output_cls(), TestOutputModel)
 
     def test_get_configuration_cls(self):
-        self.assertEqual(TestProcessor.get_configuration_cls(),
-                         TestConfigurationModel)
+        self.assertEqual(
+            TestProcessor.get_configuration_cls(),
+            TestConfigurationModel,
+        )
 
     def test_get_input_schema(self):
-        self.assertEqual(TestProcessor.get_input_schema(),
-                         TestInputModel.schema_json())
+        self.assertEqual(
+            TestProcessor.get_input_schema(),
+            TestInputModel.schema_json(),
+        )
 
     def test_get_output_schema(self):
-        self.assertEqual(TestProcessor.get_output_schema(),
-                         TestOutputModel.schema_json())
+        self.assertEqual(
+            TestProcessor.get_output_schema(),
+            TestOutputModel.schema_json(),
+        )
 
     def test_get_configuration_schema(self):
-        self.assertEqual(TestProcessor.get_configuration_schema(),
-                         TestConfigurationModel.schema_json())
+        self.assertEqual(
+            TestProcessor.get_configuration_schema(),
+            TestConfigurationModel.schema_json(),
+        )
 
 
 class TestProcessor1Input(BaseInput):

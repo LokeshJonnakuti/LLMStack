@@ -1,10 +1,22 @@
 import json
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
-from pydantic import Field, confloat, conint
+from pydantic import confloat
+from pydantic import conint
+from pydantic import Field
+
 from llmstack.common.blocks.http import HttpAPIProcessorOutput
-from llmstack.common.blocks.llm.openai import ChatMessage, FunctionCall, OpenAIAPIProcessor, OpenAIAPIProcessorConfiguration, OpenAIAPIProcessorInput, OpenAIAPIProcessorOutput, OpenAIAPIProcessorOutputMetadata
+from llmstack.common.blocks.llm.openai import ChatMessage
+from llmstack.common.blocks.llm.openai import FunctionCall
+from llmstack.common.blocks.llm.openai import OpenAIAPIProcessor
+from llmstack.common.blocks.llm.openai import OpenAIAPIProcessorConfiguration
+from llmstack.common.blocks.llm.openai import OpenAIAPIProcessorInput
+from llmstack.common.blocks.llm.openai import OpenAIAPIProcessorOutput
+from llmstack.common.blocks.llm.openai import OpenAIAPIProcessorOutputMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +73,10 @@ class LocalAICompletionsAPIProcessor(OpenAIAPIProcessor[LocalAICompletionsAPIPro
 
     def _transform_api_response(self, input: LocalAICompletionsAPIProcessorInput, configuration: LocalAICompletionsAPIProcessorConfiguration, response: HttpAPIProcessorOutput) -> LocalAICompletionsAPIProcessorOutput:
         choices = list(
-            map(lambda x: x.get('text', ''),
-                json.loads(response.text)['choices']),
+            map(
+                lambda x: x.get('text', ''),
+                json.loads(response.text)['choices'],
+            ),
         )
         json_response = json.loads(response.text)
 
@@ -98,7 +112,7 @@ class LocalAIChatCompletionsAPIProcessorOutput(OpenAIAPIProcessorOutput):
 class LocalAIChatCompletionsAPIProcessorConfiguration(OpenAIAPIProcessorConfiguration):
     base_url: Optional[str]
 
-    model: str = Field(description='ID of the model to use.',)
+    model: str = Field(description='ID of the model to use.')
 
     max_tokens: Optional[conint(ge=1, le=32000)] = Field(
         1024,
@@ -190,16 +204,20 @@ class LocalAIChatCompletionsAPIProcessor(OpenAIAPIProcessor[LocalAIChatCompletio
 
         return LocalAIChatCompletionsAPIProcessorOutput(
             choices=choices, metadata=OpenAIAPIProcessorOutputMetadata(
-                raw_response=json_response),
+                raw_response=json_response,
+            ),
         )
 
     def _transform_api_response(self, input: OpenAIAPIProcessorInput, configuration: OpenAIAPIProcessorConfiguration, response: HttpAPIProcessorOutput) -> LocalAIChatCompletionsAPIProcessorOutput:
         choices = list(
-            map(lambda x: ChatMessage(**x['message']),
-                json.loads(response.text)['choices']),
+            map(
+                lambda x: ChatMessage(**x['message']),
+                json.loads(response.text)['choices'],
+            ),
         )
 
         return LocalAIChatCompletionsAPIProcessorOutput(
             choices=choices, metadata=OpenAIAPIProcessorOutputMetadata(
-                raw_response=json.loads(response.text)),
+                raw_response=json.loads(response.text),
+            ),
         )

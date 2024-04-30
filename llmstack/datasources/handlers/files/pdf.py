@@ -9,12 +9,15 @@ from pydantic import Field
 from unstructured.documents.elements import PageBreak
 from unstructured.partition.pdf import partition_pdf
 
+from llmstack.base.models import Profile
 from llmstack.common.blocks.data.store.vectorstore import Document
 from llmstack.common.utils.splitter import SpacyTextSplitter
 from llmstack.common.utils.utils import validate_parse_data_uri
-from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem, DataSourceSchema, DataSourceProcessor, WEAVIATE_SCHEMA
+from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem
+from llmstack.datasources.handlers.datasource_processor import DataSourceProcessor
+from llmstack.datasources.handlers.datasource_processor import DataSourceSchema
+from llmstack.datasources.handlers.datasource_processor import WEAVIATE_SCHEMA
 from llmstack.datasources.models import DataSource
-from llmstack.base.models import Profile
 
 DATA_URL_REGEX = r'data:application\/(\w+);name=(.*);base64,(.*)'
 
@@ -80,8 +83,10 @@ class PDFDataSource(DataSourceProcessor[PdfSchema]):
         mime_type, file_name, file_data = validate_parse_data_uri(entry.file)
 
         data_source_entry = DataSourceEntryItem(
-            name=file_name, data={'mime_type': mime_type,
-                                  'file_name': file_name, 'file_data': file_data},
+            name=file_name, data={
+                'mime_type': mime_type,
+                'file_name': file_name, 'file_data': file_data,
+            },
         )
 
         return [data_source_entry]
@@ -104,8 +109,10 @@ class PDFDataSource(DataSourceProcessor[PdfSchema]):
                         Document(
                             page_content_key=self.get_content_key(),
                             page_content=text_chunk,
-                            metadata={'source': f"file_{data.data['file_name']}_page_{page_number}",
-                                      'page_number': page_number, 'file_name': data.data['file_name']},
+                            metadata={
+                                'source': f"file_{data.data['file_name']}_page_{page_number}",
+                                'page_number': page_number, 'file_name': data.data['file_name'],
+                            },
                         ),
                     )
                 page_content = ''

@@ -1,14 +1,13 @@
 import logging
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import orjson as json
 from asgiref.sync import async_to_sync
 from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import (
-    ApiProcessorInterface,
-    ApiProcessorSchema,
-)
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -16,31 +15,45 @@ logger = logging.getLogger(__name__)
 class ProfileActivityInput(ApiProcessorSchema):
     profile_url: str = Field(description='The profile URL', default='')
     search_term: str = Field(
-        description='The search term to use when looking for a user when profile url is unavailable', default='')
+        description='The search term to use when looking for a user when profile url is unavailable', default='',
+    )
 
 
 class ProfileActivityOutput(ApiProcessorSchema):
     posts: List[str] = Field(
-        description='Posts and reposts from the profile', default=[])
+        description='Posts and reposts from the profile', default=[],
+    )
     comments: List[str] = Field(
-        description='Comments made by the user', default=[])
+        description='Comments made by the user', default=[],
+    )
     reactions: List[str] = Field(
-        description='Reactions to the content', default=[])
+        description='Reactions to the content', default=[],
+    )
     profile_url: str = Field(
-        description='The profile URL that was used', default='')
+        description='The profile URL that was used', default='',
+    )
     error: Optional[str] = Field(
-        description='Error message if something went wrong')
+        description='Error message if something went wrong',
+    )
 
 
 class ProfileActivityConfiguration(ApiProcessorSchema):
-    connection_id: str = Field(description='LinkedIn login session connection to use',
-                               required=True, advanced_parameter=False, widget='connection')
-    n_posts: int = Field(description='Number of posts to get',
-                         default=5, ge=1, le=100)
-    n_comments: int = Field(description='Number of comments to get',
-                            default=5, ge=1, le=100)
-    n_reactions: int = Field(description='Number of reactions to get',
-                             default=5, ge=1, le=100)
+    connection_id: str = Field(
+        description='LinkedIn login session connection to use',
+        required=True, advanced_parameter=False, widget='connection',
+    )
+    n_posts: int = Field(
+        description='Number of posts to get',
+        default=5, ge=1, le=100,
+    )
+    n_comments: int = Field(
+        description='Number of comments to get',
+        default=5, ge=1, le=100,
+    )
+    n_reactions: int = Field(
+        description='Number of reactions to get',
+        default=5, ge=1, le=100,
+    )
 
 
 class ProfileActivityProcessor(ApiProcessorInterface[ProfileActivityInput, ProfileActivityOutput, ProfileActivityConfiguration]):
@@ -86,7 +99,8 @@ class ProfileActivityProcessor(ApiProcessorInterface[ProfileActivityInput, Profi
                         await results[0].click()
                     else:
                         raise Exception(
-                            f'No results found for search term {self._input.search_term}')
+                            f'No results found for search term {self._input.search_term}',
+                        )
 
                     await page.wait_for_selector('div.body', timeout=5000)
                     self._input.profile_url = page.url

@@ -8,7 +8,9 @@ from asgiref.sync import async_to_sync
 from pydantic import BaseModel
 from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, AUDIO_WIDGET_NAME, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import AUDIO_WIDGET_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -103,8 +105,11 @@ class ElevenLabsTextToSpeechProcessor(ApiProcessorInterface[TextToSpeechInput, T
                 output_data.write(chunk)
 
         async_to_sync(self._output_stream.write)(
-            TextToSpeechOutput(audio_content=base64.b64encode(
-                output_data.getvalue()).decode('utf-8')),
+            TextToSpeechOutput(
+                audio_content=base64.b64encode(
+                output_data.getvalue(),
+                ).decode('utf-8'),
+            ),
         )
 
         output = self._output_stream.finalize()

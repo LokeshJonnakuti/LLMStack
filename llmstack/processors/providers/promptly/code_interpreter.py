@@ -4,7 +4,8 @@ import signal
 from asgiref.sync import async_to_sync
 from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,8 @@ logger = logging.getLogger(__name__)
 class CodeInterpreterInput(ApiProcessorSchema):
     code: str = Field(description='The code to run')
     language: str = Field(
-        default='python', description='The language of the code')
+        default='python', description='The language of the code',
+    )
 
 
 class CodeInterpreterOutput(ApiProcessorSchema):
@@ -63,7 +65,8 @@ class CodeInterpreterProcessor(ApiProcessorInterface[CodeInterpreterInput, CodeI
         temp_dir = tempfile.mkdtemp()
         # Create a temporary file to store the code
         temp_file = tempfile.NamedTemporaryFile(
-            dir=temp_dir, delete=False)
+            dir=temp_dir, delete=False,
+        )
         # Write the code to the temporary file
         temp_file.write(code.encode('utf-8'))
         temp_file.close()
@@ -95,7 +98,8 @@ class CodeInterpreterProcessor(ApiProcessorInterface[CodeInterpreterInput, CodeI
 
         # Send the output
         async_to_sync(output_stream.write)(
-            CodeInterpreterOutput(output=output))
+            CodeInterpreterOutput(output=output),
+        )
 
         if error:
             raise Exception(error)

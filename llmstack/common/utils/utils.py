@@ -6,21 +6,24 @@ from enum import Enum
 from functools import partial
 from typing import List
 from urllib.parse import urlparse
-from django.conf import settings
 
 import geoip2.database
 import jinja2
 import requests
+from django.conf import settings
 from pydantic import BaseModel
 
-from llmstack.common.utils.crawlers import run_sitemap_spider_in_process, run_url_spider_in_process
+from llmstack.common.utils.crawlers import run_sitemap_spider_in_process
+from llmstack.common.utils.crawlers import run_url_spider_in_process
 
 logger = logging.getLogger(__name__)
 
 city_loc_reader = geoip2.database.Reader(
-    settings.GEOIP_CITY_DB_PATH) if hasattr(settings, 'GEOIP_CITY_DB_PATH') else None
+    settings.GEOIP_CITY_DB_PATH,
+) if hasattr(settings, 'GEOIP_CITY_DB_PATH') else None
 country_loc_reader = geoip2.database.Reader(
-    settings.GEOIP_COUNTRY_DB_PATH) if hasattr(settings, 'GEOIP_COUNTRY_DB_PATH') else None
+    settings.GEOIP_COUNTRY_DB_PATH,
+) if hasattr(settings, 'GEOIP_COUNTRY_DB_PATH') else None
 
 
 def get_location(ip):

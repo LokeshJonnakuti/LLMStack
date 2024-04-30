@@ -3,19 +3,19 @@ import importlib
 import logging
 import uuid
 from enum import Enum
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 from asgiref.sync import async_to_sync
 from django import db
-from openai import AzureOpenAI, OpenAI
+from openai import AzureOpenAI
+from openai import OpenAI
 from pydantic import Field
 
 from llmstack.datasources.models import DataSource
 from llmstack.datasources.types import DataSourceTypeFactory
-from llmstack.processors.providers.api_processor_interface import (
-    ApiProcessorInterface,
-    ApiProcessorSchema,
-)
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,8 @@ Keep the answers terse.""", description='Instructions for the chatbot', widget='
     citation_instructions: str = Field(
         """Use source value to provide citations for the answer. Citations must be in a new line after the answer.""",
         widget='textarea', advanced_parameter=True,
-        description='Instructions for the chatbot')
+        description='Instructions for the chatbot',
+    )
 
     k: int = Field(
         title='Documents Count', default=5,
@@ -104,8 +105,10 @@ class Citation(ApiProcessorSchema):
 
 
 class TextChatOutput(ApiProcessorSchema):
-    answer: str = Field(..., description='Answer to the question',
-                        widget='textarea')
+    answer: str = Field(
+        ..., description='Answer to the question',
+        widget='textarea',
+    )
     citations: Optional[List[Citation]]
 
 
@@ -158,8 +161,10 @@ class TextChat(ApiProcessorInterface[TextChatInput, TextChatOutput, TextChatConf
                 search_filters = input['search_filters']
                 if len(self._chat_history) > 0 and self._config.chat_history_in_doc_search > 0:
                     search_query = search_query + '\n\n' + '\n\n'.join(
-                        [m['content']
-                            for m in self._chat_history[-self._config.chat_history_in_doc_search:]],
+                        [
+                            m['content']
+                            for m in self._chat_history[-self._config.chat_history_in_doc_search:]
+                        ],
                     )
 
                 output_docs = datasource_entry_handler.search(
@@ -198,7 +203,8 @@ class TextChat(ApiProcessorInterface[TextChatInput, TextChatOutput, TextChatConf
         if docs and len(docs) > 0:
             if 'score' in docs[0].metadata:
                 docs = sorted(docs, key=lambda d: d.metadata['score'], reverse=True)[
-                    :self._config.k]
+                    :self._config.k
+                ]
             else:
                 docs = docs[:self._config.k]
 
@@ -246,7 +252,7 @@ class TextChat(ApiProcessorInterface[TextChatInput, TextChatOutput, TextChatConf
             openai_client = AzureOpenAI(
                 api_key=self._env['azure_openai_api_key'],
                 api_version='2023-03-15-preview',
-                azure_endpoint=f'https://{self._env["azure_openai_endpoint"]}.openai.azure.com',
+                azure_endpoint=f'https://{self._env['azure_openai_endpoint']}.openai.azure.com',
             )
 
             result = openai_client.chat.completions.create(
@@ -290,19 +296,31 @@ class TextChat(ApiProcessorInterface[TextChatInput, TextChatOutput, TextChatConf
             if data.object == 'chat.completion.chunk' and len(data.choices) > 0 and data.choices[0].delta and data.choices[0].delta.content:
                 async_to_sync(output_stream.write)(
                     TextChatOutput(
-                        answer=data.choices[0].delta.content
-                    ))
+                        answer=data.choices[0].delta.content,
+                    ),
+                )
 
         if len(docs) > 0:
             async_to_sync(output_stream.write)(
-                TextChatOutput(answer='', citations=list(map(lambda d: Citation(
-                    text=d.page_content, source=d.metadata['source'], distance=d.metadata['distance'] if 'distance' in d.metadata else 0.0), docs))))
+                TextChatOutput(
+                    answer='', citations=list(
+                        map(
+                            lambda d: Citation(
+                            text=d.page_content, source=d.metadata['source'], distance=d.metadata['distance'] if 'distance' in d.metadata else 0.0,
+                            ), docs,
+                        ),
+                    ),
+                ),
+            )
 
         output = output_stream.finalize()
 
         self._chat_history.append(
-            {'role': 'assistant', 'content': output['answer'] if type(
-                output) is dict else output.answer},
+            {
+                'role': 'assistant', 'content': output['answer'] if type(
+                output,
+                ) is dict else output.answer,
+            },
         )
 
         return output
