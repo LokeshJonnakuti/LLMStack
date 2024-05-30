@@ -22,6 +22,6 @@ class Command(BaseCommand):
 
         response = requests.post(
             controller_url, json=SCHEMAS[name],
-        )
+        timeout=60)
 
         self.stdout.write(self.style.SUCCESS('Schema created.'))

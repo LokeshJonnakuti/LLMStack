@@ -90,7 +90,7 @@ class ElevenLabsTextToSpeechProcessor(ApiProcessorInterface[TextToSpeechInput, T
 
         response = requests.post(
             api_url, headers=headers, json=data, stream=True,
-        )
+        timeout=60)
         response.raise_for_status()
 
         async_to_sync(self._output_stream.write)(

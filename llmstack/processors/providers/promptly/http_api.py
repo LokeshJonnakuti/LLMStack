@@ -121,7 +121,7 @@ class HttpAPIProcessorConfiguration(Schema):
         openapi_spec_url = values.get('openapi_spec_url', None)
         if values.get('parse_openapi_spec', False) == True and not values.get('_openapi_spec_parsed', False):
             if openapi_spec_url:
-                response = requests.get(openapi_spec_url)
+                response = requests.get(openapi_spec_url, timeout=60)
                 openapi_spec = response.text
             if openapi_spec:
                 parsed_spec = parse_openapi_spec(json.loads(

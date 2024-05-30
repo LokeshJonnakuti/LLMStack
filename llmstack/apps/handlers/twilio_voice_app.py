@@ -79,7 +79,7 @@ class TwilioVoiceAppRunner(AppRunner):
         if not recording_url.endswith('.mp3'):
             recording_url = recording_url + '.mp3'
             recording_filename = recording_url.split('/')[-1]
-        response = requests.get(recording_url, auth=(self.twilio_account_sid, self.twilio_auth_token))
+        response = requests.get(recording_url, auth=(self.twilio_account_sid, self.twilio_auth_token), timeout=60)
         if response.status_code == 200:
             mp3_content = response.content
             # Encode the MP3 content as a base64 data URI

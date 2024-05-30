@@ -46,7 +46,7 @@ class ExtraParams:
 
 
 def get_url_content_type(url):
-    response = requests.head(url, allow_redirects=True, verify=False)
+    response = requests.head(url, allow_redirects=True, verify=False, timeout=60)
 
     content_type = response.headers.get('Content-Type', '')
     return content_type

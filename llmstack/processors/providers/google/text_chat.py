@@ -160,7 +160,7 @@ class TextChatProcessor(ApiProcessorInterface[TextChatInput, TextChatOutput, Tex
                 'topP': self._config.topP,
             },
         }
-        with requests.post(api_url, headers=headers, json=data) as response:
+        with requests.post(api_url, headers=headers, json=data, timeout=60) as response:
             response.raise_for_status()
             response_data = response.json()
             async_to_sync(self._output_stream.write)(

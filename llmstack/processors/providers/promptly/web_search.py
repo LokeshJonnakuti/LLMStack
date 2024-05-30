@@ -108,7 +108,7 @@ class WebSearch(ApiProcessorInterface[WebSearchInput, WebSearchOutput, WebSearch
                 'cx': cx,
                 'q': query,
             }
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=60)
             if response.ok:
                 response_data = response.json()
                 items = response_data.get('items', [])
