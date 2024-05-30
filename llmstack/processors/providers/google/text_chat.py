@@ -12,7 +12,8 @@ from google.oauth2 import service_account
 from pydantic import BaseModel
 from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 

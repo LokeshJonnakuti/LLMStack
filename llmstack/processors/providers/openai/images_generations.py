@@ -1,14 +1,16 @@
-from enum import Enum
 import logging
+from enum import Enum
 from typing import List
 from typing import Optional
 
-from asgiref.sync import async_to_sync
 import openai
+from asgiref.sync import async_to_sync
 from pydantic import conint
 from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema, IMAGE_WIDGET_NAME
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import IMAGE_WIDGET_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +24,10 @@ class ResponseFormat(str, Enum):
 class ImageModel(str, Enum):
     DALL_E_3 = 'dall-e-3'
     DALL_E_2 = 'dall-e-2'
-    
+
     def __str__(self):
         return self.value
-    
+
 class Size(str, Enum):
     field_256x256 = '256x256'
     field_512x512 = '512x512'
@@ -39,7 +41,7 @@ class Size(str, Enum):
 class Quality(str, Enum):
     standard = 'standard'
     hd = 'hd'
-    
+
     def __str__(self):
         return self.value
 
@@ -113,7 +115,7 @@ class ImagesGenerations(ApiProcessorInterface[ImagesGenerationsInput, ImagesGene
 
         if not prompt:
             raise Exception('No prompt found in input')
-        
+
         client = openai.OpenAI(api_key=_env['openai_api_key'])
         result = client.images.generate(
             prompt=prompt,
@@ -122,9 +124,9 @@ class ImagesGenerations(ApiProcessorInterface[ImagesGenerationsInput, ImagesGene
             n=self._config.n,
             quality=self._config.quality,
             response_format=self._config.response_format,
-            
+
         )
-        
+
         async_to_sync(self._output_stream.write)(
             ImagesGenerationsOutput(
                 data=[image.b64_json or image.url for image in result.data],

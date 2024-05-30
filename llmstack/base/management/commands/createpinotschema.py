@@ -1,6 +1,5 @@
 import requests
 from django.core.management.base import BaseCommand
-
 from promptly_pinot_backend.tables import SCHEMAS
 
 
@@ -22,6 +21,7 @@ class Command(BaseCommand):
 
         response = requests.post(
             controller_url, json=SCHEMAS[name],
-        timeout=60)
+        timeout=60,
+        )
 
         self.stdout.write(self.style.SUCCESS('Schema created.'))

@@ -5,7 +5,7 @@ from . import apis
 urlpatterns = [
      # App run jobs
     path('api/jobs/app_run', apis.AppRunJobsViewSet.as_view({'post': 'create'})),
-    
+
     # Data source jobs
     path('api/jobs/datasource_refresh', apis.DataSourceRefreshJobsViewSet.as_view({'post': 'create'})),
 

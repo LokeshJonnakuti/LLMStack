@@ -58,7 +58,8 @@ def add_RunnerServicer_to_server(servicer, server):
         ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-        'Runner', rpc_method_handlers)
+        'Runner', rpc_method_handlers,
+    )
     server.add_generic_rpc_handlers((generic_handler,))
 
  # This class is part of an EXPERIMENTAL API.
@@ -69,35 +70,43 @@ class Runner(object):
     """
 
     @staticmethod
-    def GetRemoteBrowser(request_iterator,
-                         target,
-                         options=(),
-                         channel_credentials=None,
-                         call_credentials=None,
-                         insecure=False,
-                         compression=None,
-                         wait_for_ready=None,
-                         timeout=None,
-                         metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/Runner/GetRemoteBrowser',
-                                               runner__pb2.RemoteBrowserRequest.SerializeToString,
-                                               runner__pb2.RemoteBrowserResponse.FromString,
-                                               options, channel_credentials,
-                                               insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+    def GetRemoteBrowser(
+        request_iterator,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.stream_stream(
+            request_iterator, target, '/Runner/GetRemoteBrowser',
+            runner__pb2.RemoteBrowserRequest.SerializeToString,
+            runner__pb2.RemoteBrowserResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata,
+        )
 
     @staticmethod
-    def GetPlaywrightBrowser(request,
-                             target,
-                             options=(),
-                             channel_credentials=None,
-                             call_credentials=None,
-                             insecure=False,
-                             compression=None,
-                             wait_for_ready=None,
-                             timeout=None,
-                             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/Runner/GetPlaywrightBrowser',
-                                              runner__pb2.PlaywrightBrowserRequest.SerializeToString,
-                                              runner__pb2.PlaywrightBrowserResponse.FromString,
-                                              options, channel_credentials,
-                                              insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+    def GetPlaywrightBrowser(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_stream(
+            request, target, '/Runner/GetPlaywrightBrowser',
+            runner__pb2.PlaywrightBrowserRequest.SerializeToString,
+            runner__pb2.PlaywrightBrowserResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata,
+        )
