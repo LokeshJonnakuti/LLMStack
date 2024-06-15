@@ -7,13 +7,11 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.response import Response
 
+from .models import Connection
+from .models import ConnectionType
 from llmstack.base.models import Profile
-from llmstack.connections.types import (
-    ConnectionTypeFactory,
-    get_connection_type_interface_subclasses,
-)
-
-from .models import Connection, ConnectionType
+from llmstack.connections.types import ConnectionTypeFactory
+from llmstack.connections.types import get_connection_type_interface_subclasses
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +19,20 @@ logger = logging.getLogger(__name__)
 class ConnectionsViewSet(viewsets.ViewSet):
     def get_connection_types(self, request):
         connection_type_subclasses = get_connection_type_interface_subclasses()
-        data = list(map(lambda x: {
-            'slug': x.slug(),
-            'provider_slug': x.provider_slug(),
-            'name': x.name(),
-            'description': x.description(),
-            'config_schema': x.get_config_schema(),
-            'config_ui_schema': x.get_config_ui_schema(),
-            'base_connection_type': x.type().value,
-            'metadata': x.metadata(),
-        }, connection_type_subclasses))
+        data = list(
+            map(
+                lambda x: {
+                    'slug': x.slug(),
+                    'provider_slug': x.provider_slug(),
+                    'name': x.name(),
+                    'description': x.description(),
+                    'config_schema': x.get_config_schema(),
+                    'config_ui_schema': x.get_config_ui_schema(),
+                    'base_connection_type': x.type().value,
+                    'metadata': x.metadata(),
+                }, connection_type_subclasses,
+            ),
+        )
 
         return Response(data)
 
@@ -44,9 +46,11 @@ class ConnectionsViewSet(viewsets.ViewSet):
 
         for connection in raw_connections:
             connection_type_handler = ConnectionTypeFactory.get_connection_type_handler(
-                connection['connection_type_slug'], connection['provider_slug'])()
+                connection['connection_type_slug'], connection['provider_slug'],
+            )()
             connection['configuration'] = connection_type_handler.parse_config(
-                connection['configuration']).dict()
+                connection['configuration'],
+            ).dict()
             connections.append(connection)
 
         return Response(connections)
@@ -58,9 +62,11 @@ class ConnectionsViewSet(viewsets.ViewSet):
             return Response(status=404, reason='Connection not found')
 
         connection_type_handler = ConnectionTypeFactory.get_connection_type_handler(
-            connection['connection_type_slug'], connection['provider_slug'])()
+            connection['connection_type_slug'], connection['provider_slug'],
+        )()
         connection['configuration'] = connection_type_handler.parse_config(
-            connection['configuration']).dict()
+            connection['configuration'],
+        ).dict()
 
         return Response(connection)
 
@@ -74,7 +80,8 @@ class ConnectionsViewSet(viewsets.ViewSet):
             provider_slug=request.data.get('provider_slug'),
             configuration=request.data.get('configuration'),
             base_connection_type=request.data.get(
-                'base_connection_type', ConnectionType.BROWSER_LOGIN.value),
+                'base_connection_type', ConnectionType.BROWSER_LOGIN.value,
+            ),
             created_at=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
         )

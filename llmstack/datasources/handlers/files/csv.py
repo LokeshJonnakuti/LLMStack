@@ -4,12 +4,17 @@ from typing import Optional
 
 from pydantic import Field
 
-from llmstack.common.blocks.data.store.vectorstore import Document
-from llmstack.common.blocks.data.source.uri import Uri, UriInput, UriConfiguration
 from llmstack.common.blocks.data.source import DataSourceEnvironmentSchema
+from llmstack.common.blocks.data.source.uri import Uri
+from llmstack.common.blocks.data.source.uri import UriConfiguration
+from llmstack.common.blocks.data.source.uri import UriInput
+from llmstack.common.blocks.data.store.vectorstore import Document
 from llmstack.common.utils.splitter import CSVTextSplitter
 from llmstack.common.utils.utils import validate_parse_data_uri
-from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem, DataSourceSchema, DataSourceProcessor, WEAVIATE_SCHEMA
+from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem
+from llmstack.datasources.handlers.datasource_processor import DataSourceProcessor
+from llmstack.datasources.handlers.datasource_processor import DataSourceSchema
+from llmstack.datasources.handlers.datasource_processor import WEAVIATE_SCHEMA
 
 
 logger = logging.getLogger(__name__)
@@ -61,8 +66,10 @@ class CSVFileDataSource(DataSourceProcessor[CSVFileSchema]):
             )
 
         data_source_entry = DataSourceEntryItem(
-            name=file_name, data={'mime_type': mime_type,
-                                  'file_name': file_name, 'file_data': file_data},
+            name=file_name, data={
+                'mime_type': mime_type,
+                'file_name': file_name, 'file_data': file_data,
+            },
         )
 
         return [data_source_entry]
@@ -75,7 +82,7 @@ class CSVFileDataSource(DataSourceProcessor[CSVFileSchema]):
         data_uri = f"data:{data.data['mime_type']};name={data.data['file_name']};base64,{data.data['file_data']}"
 
         result = Uri().process(
-            input=UriInput(env=DataSourceEnvironmentSchema(openai_key=self.openai_key), uri=data_uri), configuration=UriConfiguration()
+            input=UriInput(env=DataSourceEnvironmentSchema(openai_key=self.openai_key), uri=data_uri), configuration=UriConfiguration(),
         )
 
         file_text = ''

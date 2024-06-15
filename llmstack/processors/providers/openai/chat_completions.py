@@ -17,7 +17,9 @@ from llmstack.common.blocks.llm.openai import OpenAIChatCompletionsAPIProcessor
 from llmstack.common.blocks.llm.openai import OpenAIChatCompletionsAPIProcessorConfiguration
 from llmstack.common.blocks.llm.openai import OpenAIChatCompletionsAPIProcessorInput
 from llmstack.common.blocks.llm.openai import OpenAIChatCompletionsAPIProcessorOutput
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema, CHAT_WIDGET_NAME
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import CHAT_WIDGET_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -209,13 +211,17 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionsInput, ChatCompletion
                 if isinstance(message, ChatMessage):
                     msg_dict = message.dict()
                     messages.append(
-                        {'role': msg_dict['role'],
-                            'content': msg_dict['content']},
+                        {
+                            'role': msg_dict['role'],
+                            'content': msg_dict['content'],
+                        },
                     )
                 elif isinstance(message, dict):
                     messages.append(
-                        {'role': message['role'],
-                            'content': message['content']},
+                        {
+                            'role': message['role'],
+                            'content': message['content'],
+                        },
                     )
                 else:
                     raise Exception('Invalid chat history')
@@ -251,7 +257,8 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionsInput, ChatCompletion
                         name=function.name,
                         description=function.description,
                         parameters=json.loads(
-                            function.parameters) if function.parameters is not None else {},
+                            function.parameters,
+                        ) if function.parameters is not None else {},
                     ),
                 )
 

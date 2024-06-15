@@ -1,10 +1,14 @@
-import boto3
 import re
+from typing import Dict
+from typing import Optional
 
-from typing import Dict, Optional
+import boto3
+
 from llmstack.common.blocks.base.processor import ProcessorInterface
 from llmstack.common.blocks.data import DataDocument
-from llmstack.common.blocks.data.source import DataSourceInputSchema, DataSourceConfigurationSchema, DataSourceOutputSchema
+from llmstack.common.blocks.data.source import DataSourceConfigurationSchema
+from llmstack.common.blocks.data.source import DataSourceInputSchema
+from llmstack.common.blocks.data.source import DataSourceOutputSchema
 
 
 class S3BucketInput(DataSourceInputSchema):
@@ -41,7 +45,8 @@ class S3Bucket(ProcessorInterface[S3BucketInput, DataSourceOutputSchema, S3Bucke
                     content=content if type(content) == bytes else None,
                     context_text=content if type(content) == str else None,
                     metadata={
-                        'file_name': f"{input.bucket}/{file['Key']}", **request_metadata}
-                )
+                        'file_name': f"{input.bucket}/{file['Key']}", **request_metadata,
+                    },
+                ),
             )
         return DataSourceOutputSchema(documents=documents)

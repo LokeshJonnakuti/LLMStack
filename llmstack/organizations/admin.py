@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Organization, OrganizationSettings
+
+from .models import Organization
+from .models import OrganizationSettings
 
 
 admin.site.register(Organization)

@@ -5,7 +5,8 @@ from typing import NamedTuple
 
 from jinja2 import Template
 
-from llmstack.play.actor import Actor, BookKeepingData
+from llmstack.play.actor import Actor
+from llmstack.play.actor import BookKeepingData
 from llmstack.play.utils import extract_jinja2_variables
 
 logger = logging.getLogger(__name__)

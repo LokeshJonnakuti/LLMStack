@@ -7,9 +7,18 @@ from asgiref.sync import async_to_sync
 from pydantic import conint
 from pydantic import Field
 
-from llmstack.common.blocks.llm.openai import OpenAIAPIInputEnvironment, OpenAIFile, OpenAIImageEditsProcessor, OpenAIImageEditsProcessorConfiguration, OpenAIImageEditsProcessorInput, OpenAIImageEditsProcessorOutput, Size
-from llmstack.common.utils.utils import get_key_or_raise, validate_parse_data_uri
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema, IMAGE_WIDGET_NAME
+from llmstack.common.blocks.llm.openai import OpenAIAPIInputEnvironment
+from llmstack.common.blocks.llm.openai import OpenAIFile
+from llmstack.common.blocks.llm.openai import OpenAIImageEditsProcessor
+from llmstack.common.blocks.llm.openai import OpenAIImageEditsProcessorConfiguration
+from llmstack.common.blocks.llm.openai import OpenAIImageEditsProcessorInput
+from llmstack.common.blocks.llm.openai import OpenAIImageEditsProcessorOutput
+from llmstack.common.blocks.llm.openai import Size
+from llmstack.common.utils.utils import get_key_or_raise
+from llmstack.common.utils.utils import validate_parse_data_uri
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import IMAGE_WIDGET_NAME
 
 logger = logging.getLogger(__name__)
 

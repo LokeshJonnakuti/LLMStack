@@ -40,7 +40,8 @@ class VirtualDisplay:
 
     def start(self):
         self.xvfb_process = subprocess.Popen(
-            ['Xvfb', f':{self.id}', '-screen', '0', self.display_res, '-ac'], close_fds=True)
+            ['Xvfb', f':{self.id}', '-screen', '0', self.display_res, '-ac'], close_fds=True,
+        )
         logger.info(f"Started display: {self.id}")
 
     def stop(self):
@@ -53,8 +54,12 @@ class VirtualDisplay:
             logger.info(f"Terminated x11vnc process: {self.id}")
 
     def start_x11vnc(self):
-        self.x11vnc_process = subprocess.Popen(['x11vnc', '-display', f':{self.id}', '-nopw', '-listen',
-                                                'localhost', '-xkb', '-q', '-rfbport', str(self.rfb_port)], close_fds=True)
+        self.x11vnc_process = subprocess.Popen(
+            [
+                'x11vnc', '-display', f':{self.id}', '-nopw', '-listen',
+                'localhost', '-xkb', '-q', '-rfbport', str(self.rfb_port),
+            ], close_fds=True,
+        )
         logger.info(f"Started x11vnc process: {self.id}")
 
     def stop_x11vnc(self):
@@ -82,23 +87,31 @@ class VirtualDisplayPool():
         self.rfb_start_port = rfb_start_port
         self.hostname = hostname
         self.ip_address = subprocess.check_output(
-            ['hostname', '-i']).decode('utf-8').strip()
-        self._create_displays(max_displays, start_display,
-                              display_res, rfb_start_port)
+            ['hostname', '-i'],
+        ).decode('utf-8').strip()
+        self._create_displays(
+            max_displays, start_display,
+            display_res, rfb_start_port,
+        )
 
     def get_display(self, timeout=10, remote_control=False):
         display = self._get_display(timeout)
 
         # We start noVNC if remote_control is True
         if remote_control:
-            x11vnc_process = subprocess.Popen(['x11vnc', '-display', display['DISPLAY'], '-nopw', '-listen',
-                                              f'{self.ip_address}', '-xkb', '-q', '-rfbport', str(display['rfb_port'])], close_fds=True)
+            x11vnc_process = subprocess.Popen(
+                [
+                    'x11vnc', '-display', display['DISPLAY'], '-nopw', '-listen',
+                    f'{self.ip_address}', '-xkb', '-q', '-rfbport', str(display['rfb_port']),
+                ], close_fds=True,
+            )
             display['x11vnc_process'] = x11vnc_process
             display['token'] = str(uuid.uuid4())
 
             # Add display to redis with a TTL of 1 minute
             self.redis_client.set(
-                display['token'], '{"host": "' + f'{self.ip_address}:{display["rfb_port"]}' + '"}', ex=60)
+                display['token'], '{"host": "' + f'{self.ip_address}:{display['rfb_port']}' + '"}', ex=60,
+            )
 
             # Generate and add temp credentials to redis with a TTL of 1 minute
             username = str(uuid.uuid4())
@@ -135,7 +148,8 @@ class VirtualDisplayPool():
 
     def _create_display(self, display_id, display_res, rfb_port):
         xvfb_process = subprocess.Popen(
-            ['Xvfb', f':{display_id}', '-screen', '0', display_res, '-ac'], close_fds=True)
+            ['Xvfb', f':{display_id}', '-screen', '0', display_res, '-ac'], close_fds=True,
+        )
 
         self.display_queue.put({
             'id': display_id,
@@ -149,7 +163,8 @@ class VirtualDisplayPool():
         threads = []
         for i in range(max_displays):
             thread = threading.Thread(
-                target=self._create_display, args=(start_display + i, display_res, rfb_start_port + i))
+                target=self._create_display, args=(start_display + i, display_res, rfb_start_port + i),
+            )
             thread.start()
             threads.append(thread)
 
@@ -165,12 +180,14 @@ class VirtualDisplayPool():
             else:
                 display['xvfb_process'].kill()
                 self._create_display(
-                    display['id'], self.display_res, display['rfb_port'])
+                    display['id'], self.display_res, display['rfb_port'],
+                )
                 logger.info(f"Recreated display: {display['id']}")
 
             if time.time() - start_time > timeout:
                 raise DisplayNotFoundException(
-                    f"Display not found in {timeout} seconds")
+                    f"Display not found in {timeout} seconds",
+                )
 
     # Clean up all displays when object is destroyed
     def __del__(self):
