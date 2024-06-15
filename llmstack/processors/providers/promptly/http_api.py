@@ -10,6 +10,7 @@ from requests.auth import HTTPBasicAuth
 
 from llmstack.common.blocks.base.processor import Schema
 from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from security import safe_requests
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +122,7 @@ class HttpAPIProcessorConfiguration(Schema):
         openapi_spec_url = values.get('openapi_spec_url', None)
         if values.get('parse_openapi_spec', False) == True and not values.get('_openapi_spec_parsed', False):
             if openapi_spec_url:
-                response = requests.get(openapi_spec_url)
+                response = safe_requests.get(openapi_spec_url)
                 openapi_spec = response.text
             if openapi_spec:
                 parsed_spec = parse_openapi_spec(json.loads(
@@ -230,7 +231,7 @@ class PromptlyHttpAPIProcessor(ApiProcessorInterface[HttpAPIProcessorInput, Http
                 headers["Authorization"] = f"Bearer {connection['configuration']['token']}"
 
         if method == HttpMethod.GET:
-            response = requests.get(url=url,
+            response = safe_requests.get(url=url,
                                     headers=headers,
                                     params=params,
                                     timeout=self._config.timeout,

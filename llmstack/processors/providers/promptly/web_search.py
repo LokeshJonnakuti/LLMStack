@@ -1,4 +1,3 @@
-import requests
 from enum import Enum
 from typing import List
 
@@ -6,6 +5,7 @@ from asgiref.sync import async_to_sync
 from pydantic import Field
 
 from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from security import safe_requests
 
 class SearchEngine(str, Enum):
     GOOGLE = 'Google'
@@ -108,7 +108,7 @@ class WebSearch(ApiProcessorInterface[WebSearchInput, WebSearchOutput, WebSearch
                 'cx': cx,
                 'q': query,
             }
-            response = requests.get(url, params=params)
+            response = safe_requests.get(url, params=params)
             if response.ok:
                 response_data = response.json()
                 items = response_data.get('items', [])

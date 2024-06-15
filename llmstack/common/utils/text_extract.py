@@ -14,7 +14,6 @@ from unstructured.partition.auto import partition_html
 from unstructured.partition.docx import partition_docx
 from unstructured.partition.epub import partition_epub
 from unstructured.partition.image import partition_image
-from unstructured.partition.json import partition_json
 from unstructured.partition.md import partition_md
 from unstructured.partition.pdf import partition_pdf
 from unstructured.partition.pptx import partition_pptx
@@ -22,6 +21,7 @@ from unstructured.partition.text import partition_text
 
 from llmstack.common.utils.audio_loader import partition_audio, partition_video, partition_youtube_audio
 from llmstack.common.utils.crawlers import run_url_spider_in_process
+from security import safe_requests
 
 logger = logging.getLogger(__name__)
 headers = {
@@ -185,12 +185,11 @@ def extract_text_from_url(url, extra_params: Optional[ExtraParams] = None):
             data = result[0]['html_page'].encode('utf-8')
         except:
             logger.exception('Error in running url spider')
-            data = requests.get(
-                url=url, headers=headers,
+            data = safe_requests.get(url=url, headers=headers,
                 timeout=timeout,
             ).content
     else:
-        data = requests.get(url=url, headers=headers, timeout=timeout).content
+        data = safe_requests.get(url=url, headers=headers, timeout=timeout).content
 
     elements = extract_text_elements(
         mime_type=mime_type,

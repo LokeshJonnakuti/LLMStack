@@ -1,7 +1,6 @@
 import logging
 import base64
 import re
-import requests
 from typing import Dict
 from pydantic import root_validator
 
@@ -11,6 +10,7 @@ from llmstack.common.utils.text_extract import is_youtube_video_url, get_url_con
 from llmstack.common.blocks.data.text_extractor.local import LocalTextExtractorProcessor
 from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorProcessor, WhisperTextExtractorInput
 from llmstack.common.blocks.data.text_extractor import TextExtractorInput
+from security import safe_requests
 
 logger = logging.getLogger(__name__)
 
@@ -130,11 +130,11 @@ class Uri(ProcessorInterface[UriInput, DataSourceOutputSchema, UriConfiguration]
                     url=input.uri, use_renderer=True)
                 data = result[0]['html_page'].encode('utf-8')
             else:
-                data = requests.get(url=input.uri, headers=configuration.headers,
+                data = safe_requests.get(url=input.uri, headers=configuration.headers,
                                     timeout=configuration.default_timeout,
                                     ).content
         else:
-            data = requests.get(url=input.uri, headers=configuration.headers,
+            data = safe_requests.get(url=input.uri, headers=configuration.headers,
                                 timeout=configuration.default_timeout).content
 
         return self._extract_text(data, mime_type, input.uri, configuration)
