@@ -3,7 +3,8 @@ import uuid
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
+from pydantic import validator
 
 """
 We use pydantic models to represent the connection information and save it in the database as encrypted json.
@@ -26,7 +27,7 @@ class ConnectionStatus(str, Enum):
 class ConnectionType(str, Enum):
     BROWSER_LOGIN = 'browser_login'
     OAUTH2 = 'oauth2'
-    CREDENTIALS = 'credentials'    
+    CREDENTIALS = 'credentials'
 class Connection(BaseModel):
     """
     Connection model

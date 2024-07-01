@@ -3,17 +3,16 @@ import multiprocessing as mp
 from urllib.parse import urlparse
 
 from asgiref.sync import async_to_sync
+from django.conf import settings
 from playwright.async_api import async_playwright
 from scrapy import Selector
 from scrapy.crawler import CrawlerProcess
+from scrapy.exceptions import CloseSpider
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider
 from scrapy.spiders import Rule
 from scrapy.spiders import SitemapSpider
 from unstructured.partition.auto import partition_html
-from scrapy.exceptions import CloseSpider
-
-from django.conf import settings
 
 CRAWLER_SETTINGS = {
     'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
@@ -213,7 +212,9 @@ def run_url_spider_in_process(url, max_depth=0, allowed_domains=None, allow_rege
     result = mp.Queue()
     mp.Process(
         target=_run_url_spider_process,
-        args=(url, result, max_depth, allowed_domains,
-              allow_regex, deny_regex, use_renderer),
+        args=(
+            url, result, max_depth, allowed_domains,
+            allow_regex, deny_regex, use_renderer,
+        ),
     ).start()
     return result.get()

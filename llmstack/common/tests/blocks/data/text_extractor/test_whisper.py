@@ -1,13 +1,15 @@
-import unittest
 import os
+import unittest
 
-from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorProcessor, WhisperTextExtractorInput
+from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorInput
+from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorProcessor
 
 
 class WhisperTextExtractorProcessorTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.fixtures_dir = __file__.replace(
-            'test_whisper.py', '../../../fixtures')
+            'test_whisper.py', '../../../fixtures',
+        )
 
         self.api_key = os.environ.get('OPENAI_API_KEY')
 
@@ -16,16 +18,21 @@ class WhisperTextExtractorProcessorTestCase(unittest.TestCase):
             file_data = file_p.read()
             mime_type = 'audio/mp3'
             result = WhisperTextExtractorProcessor().process(
-                input=WhisperTextExtractorInput(data=file_data,
-                                                mime_type=mime_type,
-                                                id="sample.mp3",
-                                                openai_api_key=self.api_key),
-                configuration=None)
+                input=WhisperTextExtractorInput(
+                    data=file_data,
+                    mime_type=mime_type,
+                    id='sample.mp3',
+                    openai_api_key=self.api_key,
+                ),
+                configuration=None,
+            )
             self.assertTrue(len(result.documents) > 0)
             self.assertEqual(
-                result.documents[0].metadata['file_name'], 'sample.mp3')
+                result.documents[0].metadata['file_name'], 'sample.mp3',
+            )
             self.assertEqual(
-                result.documents[0].metadata['mime_type'], 'audio/mp3')
+                result.documents[0].metadata['mime_type'], 'audio/mp3',
+            )
 
 
 if __name__ == '__main__':

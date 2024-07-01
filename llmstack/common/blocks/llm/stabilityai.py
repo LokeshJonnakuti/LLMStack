@@ -1,5 +1,6 @@
 import json
 import logging
+import secrets
 from enum import Enum
 from typing import List
 from typing import Optional
@@ -13,9 +14,12 @@ from PIL import Image
 from pydantic import Field
 from stability_sdk import client
 
-from llmstack.common.blocks.base.processor import BaseConfiguration, BaseInput, BaseInputEnvironment, BaseOutputType, Schema
+from llmstack.common.blocks.base.processor import BaseConfiguration
+from llmstack.common.blocks.base.processor import BaseInput
+from llmstack.common.blocks.base.processor import BaseInputEnvironment
+from llmstack.common.blocks.base.processor import BaseOutputType
+from llmstack.common.blocks.base.processor import Schema
 from llmstack.common.blocks.llm import LLMBaseProcessor
-import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -224,7 +228,8 @@ class StabilityAIText2ImageGrpcProcessor(LLMBaseProcessor[StabilityAIText2ImageG
                 prompts.append(
                     generation.Prompt(
                         text=p, parameters=generation.PromptParameters(
-                            weight=1),
+                            weight=1,
+                        ),
                     ),
                 )
 
@@ -233,11 +238,13 @@ class StabilityAIText2ImageGrpcProcessor(LLMBaseProcessor[StabilityAIText2ImageG
                 prompts.append(
                     generation.Prompt(
                         text=p, parameters=generation.PromptParameters(
-                            weight=-1),
+                            weight=-1,
+                        ),
                     ),
                 )
 
-        seed = secrets.SystemRandom().randint(0, 2147483646,
+        seed = secrets.SystemRandom().randint(
+            0, 2147483646,
         ) if configuration.seed == 0 else configuration.seed
 
         api_response = invoke_grpc_rpc(
@@ -260,8 +267,10 @@ class StabilityAIText2ImageGrpcProcessor(LLMBaseProcessor[StabilityAIText2ImageG
                 for image_data in entry['artifacts']:
                     if image_data['type'] == 'ARTIFACT_IMAGE':
                         processed_response.append(
-                            {'b64_json-image': image_data['binary'],
-                                'mime-type': image_data['mime']},
+                            {
+                                'b64_json-image': image_data['binary'],
+                                'mime-type': image_data['mime'],
+                            },
                         )
 
         result = []

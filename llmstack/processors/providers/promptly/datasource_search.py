@@ -11,7 +11,8 @@ from pydantic import Field
 
 from llmstack.datasources.models import DataSource
 from llmstack.datasources.types import DataSourceTypeFactory
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class DataSourceSearchConfigurations(ApiProcessorSchema):
         title='Search filters', default=None, description='Search filters on datasource entry metadata. You can provide search filters like `source == url1 || source == url2`. Click on your data entries to get your metadata', advanced_parameter=True,
     )
     hybrid_semantic_search_ratio: Optional[float] = Field(
-        default=0.75, description='Ratio of semantic search to hybrid search', ge=0.0, le=1.0, multiple_of=0.01
+        default=0.75, description='Ratio of semantic search to hybrid search', ge=0.0, le=1.0, multiple_of=0.01,
     )
 
 
@@ -105,7 +106,8 @@ class DataSourceSearchProcessor(ApiProcessorInterface[DataSourceSearchInput, Dat
         if documents and len(documents) > 0:
             if 'score' in documents[0].metadata:
                 documents = sorted(documents, key=lambda d: d.metadata['score'], reverse=True)[
-                    :self._config.document_limit]
+                    :self._config.document_limit
+                ]
             else:
                 documents = documents[:self._config.document_limit]
 
@@ -126,7 +128,7 @@ class DataSourceSearchProcessor(ApiProcessorInterface[DataSourceSearchInput, Dat
                         distance=document.metadata['distance'] if 'distance' in document.metadata else 0.0,
                         score=document.metadata['score'] if 'score' in document.metadata else None,
                     ),
-                    additional_properties=document.metadata
+                    additional_properties=document.metadata,
                 ),
             )
             answer_text += f'Content: {document.page_content} \n\nSource: {source} \n\n\n\n'

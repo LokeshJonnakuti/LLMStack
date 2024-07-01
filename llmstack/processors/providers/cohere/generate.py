@@ -4,8 +4,15 @@ from typing import Optional
 from asgiref.sync import async_to_sync
 from pydantic import Field
 
-from llmstack.common.blocks.llm.cohere import CohereAPIInputEnvironment, CohereGenerateAPIProcessor, CohereGenerateAPIProcessorConfiguration, CohereGenerateAPIProcessorInput, CohereGenerateAPIProcessorOutput, CohereGenerateAPIProcessorOutputMetadata, GenerateModel
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.common.blocks.llm.cohere import CohereAPIInputEnvironment
+from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessor
+from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessorConfiguration
+from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessorInput
+from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessorOutput
+from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessorOutputMetadata
+from llmstack.common.blocks.llm.cohere import GenerateModel
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 

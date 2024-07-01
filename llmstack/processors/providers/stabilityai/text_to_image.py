@@ -1,5 +1,6 @@
 import json
 import logging
+import secrets
 from enum import Enum
 from typing import Any
 from typing import Dict
@@ -14,9 +15,13 @@ from pydantic import Field
 from stability_sdk import client
 
 from llmstack.common.utils.utils import get_key_or_raise
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema, IMAGE_WIDGET_NAME
-from llmstack.processors.providers.stabilityai.utils import get_guidance_preset_enum, get_sampler_grpc_enum, GuidancePreset, Sampler
-import secrets
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import IMAGE_WIDGET_NAME
+from llmstack.processors.providers.stabilityai.utils import get_guidance_preset_enum
+from llmstack.processors.providers.stabilityai.utils import get_sampler_grpc_enum
+from llmstack.processors.providers.stabilityai.utils import GuidancePreset
+from llmstack.processors.providers.stabilityai.utils import Sampler
 
 
 logger = logging.getLogger(__name__)
@@ -125,7 +130,8 @@ class TextToImage(ApiProcessorInterface[TextToImageInput, TextToImageOutput, Tex
                 prompts.append(
                     generation.Prompt(
                         text=p, parameters=generation.PromptParameters(
-                            weight=1),
+                            weight=1,
+                        ),
                     ),
                 )
 
@@ -134,7 +140,8 @@ class TextToImage(ApiProcessorInterface[TextToImageInput, TextToImageOutput, Tex
                 prompts.append(
                     generation.Prompt(
                         text=p, parameters=generation.PromptParameters(
-                            weight=-1),
+                            weight=-1,
+                        ),
                     ),
                 )
 
@@ -177,8 +184,11 @@ class TextToImage(ApiProcessorInterface[TextToImageInput, TextToImageOutput, Tex
                     if image_data['type'] == 'ARTIFACT_IMAGE':
                         async_to_sync(self._output_stream.write)(
                             TextToImageOutput(
-                                answer=(['' for _ in range(
-                                    image_count)] + ['data:{};base64,{}'.format(image_data['mime'], image_data['binary'])]),
+                                answer=([
+                                    '' for _ in range(
+                                    image_count,
+                                    )
+                                ] + ['data:{};base64,{}'.format(image_data['mime'], image_data['binary'])]),
                             ),
                         )
                         image_count += 1

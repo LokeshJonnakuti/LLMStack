@@ -8,7 +8,8 @@ from typing import Type
 from asgiref.sync import async_to_sync
 from pydantic import BaseModel
 
-from llmstack.play.actor import Actor, BookKeepingData
+from llmstack.play.actor import Actor
+from llmstack.play.actor import BookKeepingData
 
 logger = logging.getLogger(__name__)
 
