@@ -5,6 +5,7 @@ from asgiref.sync import async_to_sync
 from pydantic import Field
 
 from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from security import safe_command
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +70,7 @@ class CodeInterpreterProcessor(ApiProcessorInterface[CodeInterpreterInput, CodeI
         temp_file.close()
 
         # Run the code in a subprocess
-        process = subprocess.Popen(
-            [sys.executable, temp_file.name],
+        process = safe_command.run(subprocess.Popen, [sys.executable, temp_file.name],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             preexec_fn=os.setsid,
