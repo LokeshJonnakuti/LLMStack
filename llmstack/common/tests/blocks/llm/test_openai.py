@@ -1,5 +1,6 @@
-import unittest
 import os
+import unittest
+
 from llmstack.common.blocks.llm.openai import OpenAIChatCompletionsAPIProcessor
 
 
@@ -52,6 +53,6 @@ class OpenAIChatCompletionsAPIProcessorTestCase(unittest.TestCase):
         )
         self.assertIn('ice', output.choices[0].content.lower())
 
-      
+
 if __name__ == '__main__':
     unittest.main()

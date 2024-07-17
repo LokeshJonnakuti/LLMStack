@@ -125,13 +125,13 @@ VECTOR_DATABASES = {
         'ENGINE': '{}'.format(
             os.getenv('VECTOR_DATABASE_ENGINE', 'chroma'),
         ),
-        'NAME': os.getenv('VECTOR_DATABASE_NAME', './llmstack.chromadb',),
+        'NAME': os.getenv('VECTOR_DATABASE_NAME', './llmstack.chromadb'),
         'HOST': os.getenv('VECTOR_DATABASE_HOST', 'http://weaviate:8080'),
         'USER': os.getenv('VECTOR_DATABASE_USERNAME', None),
         'PASSWORD': os.getenv('VECTOR_DATABASE_PASSWORD', None),
         'AUTH_TOKEN': os.getenv('VECTOR_DATABASE_AUTH_TOKEN', None),
         'API_KEY': os.getenv('VECTOR_DATABASE_API_KEY', None),
-    }
+    },
 }
 
 AUTHENTICATION_BACKENDS = [
@@ -182,24 +182,26 @@ STATICFILES_DIRS = [
     os.path.join(REACT_APP_DIR, 'build', 'static'),
 ]
 GENERATEDFILES_ROOT = os.getenv(
-    'GENERATEDFILES_ROOT', os.path.join(BASE_DIR, 'generatedfiles'))
+    'GENERATEDFILES_ROOT', os.path.join(BASE_DIR, 'generatedfiles'),
+)
 GENERATEDFILES_URL = os.getenv(
-    'GENERATEDFILES_URL', '/generatedfiles/')
+    'GENERATEDFILES_URL', '/generatedfiles/',
+)
 
 STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
-    "generatedfiles": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-        "OPTIONS": {
-            "location": GENERATEDFILES_ROOT,
-            "base_url": GENERATEDFILES_URL,
-        }
-    }
+    'generatedfiles': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'OPTIONS': {
+            'location': GENERATEDFILES_ROOT,
+            'base_url': GENERATEDFILES_URL,
+        },
+    },
 }
 
 # Default primary key field type
@@ -304,9 +306,11 @@ DEFAULT_GOOGLE_SERVICE_ACCOUNT_JSON_KEY = os.getenv(
 DEFAULT_LOCALAI_API_KEY = os.getenv('DEFAULT_LOCALAI_API_KEY', '')
 DEFAULT_LOCALAI_BASE_URL = os.getenv('DEFAULT_LOCALAI_BASE_URL', '')
 DEFAULT_GOOGLE_CUSTOM_SEARCH_API_KEY = os.getenv(
-    'DEFAULT_GOOGLE_CUSTOM_SEARCH_API_KEY', '')
+    'DEFAULT_GOOGLE_CUSTOM_SEARCH_API_KEY', '',
+)
 DEFAULT_GOOGLE_CUSTOM_SEARCH_CX = os.getenv(
-    'DEFAULT_GOOGLE_CUSTOM_SEARCH_CX', '')
+    'DEFAULT_GOOGLE_CUSTOM_SEARCH_CX', '',
+)
 
 WEAVIATE_URL = os.getenv('WEAVIATE_URL', 'http://weaviate:8080')
 WEAVIATE_TEXT2VEC_MODULE_CONFIG = {
@@ -419,7 +423,7 @@ PROVIDERS = [
         'name': 'LinkedIn',
         'processor_packages': ['llmstack.processors.providers.linkedin'],
         'slug': 'linkedin',
-    }
+    },
 ]
 
 # Include networking providers if they are enabled
@@ -433,35 +437,51 @@ try:
 except ImportError:
     pass
 
-PROCESSOR_PROVIDERS = sum(list(
-    map(lambda entry: entry['processor_packages'], filter(
-        lambda provider: 'processor_packages' in provider,
-        PROVIDERS,
-    )),
-), [])
+PROCESSOR_PROVIDERS = sum(
+    list(
+        map(
+            lambda entry: entry['processor_packages'], filter(
+                lambda provider: 'processor_packages' in provider,
+                PROVIDERS,
+            ),
+        ),
+    ), [],
+)
 
-PROCESSOR_EXCLUDE_LIST = sum(list(
-    map(lambda entry: entry['processor_exclude'], filter(
-        lambda provider: 'processor_exclude' in provider,
-        PROVIDERS,
-    )),
-), [])
+PROCESSOR_EXCLUDE_LIST = sum(
+    list(
+        map(
+            lambda entry: entry['processor_exclude'], filter(
+                lambda provider: 'processor_exclude' in provider,
+                PROVIDERS,
+            ),
+        ),
+    ), [],
+)
 
-DATASOURCE_TYPE_PROVIDERS = sum(list(
-    map(lambda entry: entry['datasource_packages'], filter(
-        lambda provider: 'datasource_packages' in provider,
-        PROVIDERS,
-    )),
-), [])
+DATASOURCE_TYPE_PROVIDERS = sum(
+    list(
+        map(
+            lambda entry: entry['datasource_packages'], filter(
+                lambda provider: 'datasource_packages' in provider,
+                PROVIDERS,
+            ),
+        ),
+    ), [],
+)
 
-DATASOURCE_PROCESSOR_EXCLUDE_LIST = sum(list(
-    map(lambda entry: entry['datasource_processors_exclude'], filter(
-        lambda provider: 'datasource_processors_exclude' in provider,
-        PROVIDERS,
-    )),
-), [])
+DATASOURCE_PROCESSOR_EXCLUDE_LIST = sum(
+    list(
+        map(
+            lambda entry: entry['datasource_processors_exclude'], filter(
+                lambda provider: 'datasource_processors_exclude' in provider,
+                PROVIDERS,
+            ),
+        ),
+    ), [],
+)
 
 
 APP_TEMPLATES_DIR = os.getenv('APP_TEMPATES_DIR').split(',') if os.getenv('APP_TEMPATES_DIR') else [
-    os.path.join(BASE_DIR, 'contrib', 'apps', 'templates')
+    os.path.join(BASE_DIR, 'contrib', 'apps', 'templates'),
 ]

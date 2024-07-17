@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from llmstack.apps.yaml_loader import get_app_template_by_slug
-
-from .models import App, AppAccessPermission, AppData
+from .models import App
+from .models import AppAccessPermission
+from .models import AppData
 from .models import AppHub
 from .models import AppRunGraphEntry
 from .models import AppSession
@@ -13,10 +13,14 @@ from .models import TestCase
 from .models import TestSet
 from llmstack.apps.app_templates import AppTemplateFactory
 from llmstack.apps.app_types import AppTypeFactory
-from llmstack.play.utils import convert_template_vars_from_legacy_format
-from llmstack.processors.models import ApiBackend, Endpoint
+from llmstack.apps.yaml_loader import get_app_template_by_slug
 from llmstack.base.models import Profile
-from llmstack.processors.serializers import ApiBackendSerializer, ApiProviderSerializer, EndpointSerializer
+from llmstack.play.utils import convert_template_vars_from_legacy_format
+from llmstack.processors.models import ApiBackend
+from llmstack.processors.models import Endpoint
+from llmstack.processors.serializers import ApiBackendSerializer
+from llmstack.processors.serializers import ApiProviderSerializer
+from llmstack.processors.serializers import EndpointSerializer
 
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
@@ -138,7 +142,8 @@ class AppSerializer(DynamicFieldsModelSerializer):
 
     def get_data(self, obj):
         app_data = AppData.objects.filter(
-            app_uuid=obj.uuid).order_by('-created_at').first()
+            app_uuid=obj.uuid,
+        ).order_by('-created_at').first()
         if app_data and app_data.data:
             if not obj.has_write_permission(self._request_user):
                 app_data.data.pop('processors', None)
@@ -147,7 +152,8 @@ class AppSerializer(DynamicFieldsModelSerializer):
 
     def get_has_live_version(self, obj):
         app_datas = AppData.objects.filter(
-            app_uuid=obj.uuid, is_draft=False).first()
+            app_uuid=obj.uuid, is_draft=False,
+        ).first()
         return app_datas is not None
 
     def get_app_type_name(self, obj):
@@ -251,7 +257,7 @@ class AppSerializer(DynamicFieldsModelSerializer):
             'logo', 'is_shareable', 'has_footer', 'domain', 'visibility', 'accessible_by',
             'access_permission', 'last_modified_by_email', 'owner_email', 'web_config',
             'slack_config', 'discord_config', 'twilio_config', 'app_type_name', 'processors', 'template',
-            'app_type_slug', 'read_accessible_by', 'write_accessible_by', 'has_live_version'
+            'app_type_slug', 'read_accessible_by', 'write_accessible_by', 'has_live_version',
         ]
 
 
@@ -299,7 +305,8 @@ class AppTemplateSerializer(serializers.ModelSerializer):
 
         def get_input_fields(self, obj):
             app_data = AppData.objects.filter(
-                app_uuid=obj.uuid).order_by('-created_at').first()
+                app_uuid=obj.uuid,
+            ).order_by('-created_at').first()
             if app_data:
                 return app_data.data.get('input_fields', [])
             return []
@@ -309,7 +316,7 @@ class AppTemplateSerializer(serializers.ModelSerializer):
             fields = [
                 'config', 'input_schema', 'type',
                 'input_ui_schema', 'output_template', 'processors',
-                'input_fields'
+                'input_fields',
             ]
 
     app = serializers.SerializerMethodField()
@@ -360,8 +367,10 @@ class AppDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AppData
-        fields = ['version', 'app_uuid', 'data',
-                  'created_at', 'last_updated_at', 'is_draft', 'comment']
+        fields = [
+            'version', 'app_uuid', 'data',
+            'created_at', 'last_updated_at', 'is_draft', 'comment',
+        ]
 
 
 class AppHubSerializer(serializers.ModelSerializer):

@@ -1,10 +1,11 @@
 import uuid
 
 from .types.app_type_interface import AppTypeInterface
-from llmstack.apps.models import App, AppType
-# Import all app types here
 from .types.chat import ChatApp
 from .types.web import WebApp
+from llmstack.apps.models import App
+from llmstack.apps.models import AppType
+# Import all app types here
 
 
 class AppTypeFactory:

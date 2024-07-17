@@ -1,7 +1,7 @@
 import logging
 
-from llmstack.processors.models import RunEntry
 from .history import HistoryStore
+from llmstack.processors.models import RunEntry
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,8 @@ def persist_history_task_internal(processors, bookkeeping_data_map):
     output = bookkeeping_data_map['agent']['run_data'] if 'agent' in bookkeeping_data_map else bookkeeping_data_map['output']['run_data']
 
     output_timestamp = bookkeeping_data_map['agent'][
-        'timestamp'] if 'agent' in bookkeeping_data_map else bookkeeping_data_map['output']['timestamp']
+        'timestamp'
+    ] if 'agent' in bookkeeping_data_map else bookkeeping_data_map['output']['timestamp']
     discord_data = bookkeeping_data_map['discord_processor'] if 'discord_processor' in bookkeeping_data_map else None
     slack_data = bookkeeping_data_map['slack_processor'] if 'slack_processor' in bookkeeping_data_map else None
     twilio_data = bookkeeping_data_map['twilio_processor'] if 'twilio_processor' in bookkeeping_data_map else None
@@ -100,7 +101,8 @@ def persist_history_task_internal(processors, bookkeeping_data_map):
 
     # Persist history
     HistoryStore.persist(
-        run_entry, processor_runs=processor_runs, input=input)
+        run_entry, processor_runs=processor_runs, input=input,
+    )
 
 
 def persist_history_task(processors, bookkeeping_data_map):

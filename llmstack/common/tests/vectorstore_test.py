@@ -1,7 +1,8 @@
 import os
 import unittest
 
-from llmstack.common.blocks.data.store.vectorstore import Document, DocumentQuery
+from llmstack.common.blocks.data.store.vectorstore import Document
+from llmstack.common.blocks.data.store.vectorstore import DocumentQuery
 from llmstack.common.blocks.data.store.vectorstore.chroma import Chroma
 from llmstack.common.blocks.data.store.vectorstore.weaviate import Weaviate
 
@@ -85,8 +86,10 @@ class WeaviateTest(unittest.TestCase):
         )
         self.assertIsNotNone(result)
         result = self.weaviate_handle.similarity_search(
-            self.TEST_INDEX.capitalize(), DocumentQuery('Test content', 'content',
-                                                        1, {'additional_properties': ['source']}),
+            self.TEST_INDEX.capitalize(), DocumentQuery(
+                'Test content', 'content',
+                1, {'additional_properties': ['source']},
+            ),
         )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].page_content, 'Test content')
@@ -107,8 +110,10 @@ class WeaviateTest(unittest.TestCase):
         )
         self.assertIsNotNone(result)
         result = self.weaviate_handle.similarity_search(
-            self.TEST_INDEX.capitalize(), DocumentQuery('Test content', 'content',
-                                                        1, {'additional_properties': ['source']}),
+            self.TEST_INDEX.capitalize(), DocumentQuery(
+                'Test content', 'content',
+                1, {'additional_properties': ['source']},
+            ),
         )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].page_content, 'Test content')

@@ -3,9 +3,10 @@ import signal
 
 from asgiref.sync import async_to_sync
 from pydantic import Field
-
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
 from security import safe_command
+
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,8 @@ logger = logging.getLogger(__name__)
 class CodeInterpreterInput(ApiProcessorSchema):
     code: str = Field(description='The code to run')
     language: str = Field(
-        default='python', description='The language of the code')
+        default='python', description='The language of the code',
+    )
 
 
 class CodeInterpreterOutput(ApiProcessorSchema):
@@ -64,16 +66,18 @@ class CodeInterpreterProcessor(ApiProcessorInterface[CodeInterpreterInput, CodeI
         temp_dir = tempfile.mkdtemp()
         # Create a temporary file to store the code
         temp_file = tempfile.NamedTemporaryFile(
-            dir=temp_dir, delete=False)
+            dir=temp_dir, delete=False,
+        )
         # Write the code to the temporary file
         temp_file.write(code.encode('utf-8'))
         temp_file.close()
 
         # Run the code in a subprocess
-        process = safe_command.run(subprocess.Popen, [sys.executable, temp_file.name],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            preexec_fn=os.setsid,
+        process = safe_command.run(
+            subprocess.Popen, [sys.executable, temp_file.name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                preexec_fn=os.setsid,
         )
 
         # Wait for the process to finish or timeout
@@ -95,7 +99,8 @@ class CodeInterpreterProcessor(ApiProcessorInterface[CodeInterpreterInput, CodeI
 
         # Send the output
         async_to_sync(output_stream.write)(
-            CodeInterpreterOutput(output=output))
+            CodeInterpreterOutput(output=output),
+        )
 
         if error:
             raise Exception(error)

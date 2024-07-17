@@ -1,9 +1,13 @@
+from typing import Dict
+from typing import Optional
+
 import boto3
 
-from typing import Dict, Optional
 from llmstack.common.blocks.base.processor import ProcessorInterface
 from llmstack.common.blocks.data import DataDocument
-from llmstack.common.blocks.data.source import DataSourceInputSchema, DataSourceConfigurationSchema, DataSourceOutputSchema
+from llmstack.common.blocks.data.source import DataSourceConfigurationSchema
+from llmstack.common.blocks.data.source import DataSourceInputSchema
+from llmstack.common.blocks.data.source import DataSourceOutputSchema
 
 
 class S3PathInput(DataSourceInputSchema):
@@ -41,11 +45,14 @@ class S3Path(ProcessorInterface[S3PathInput, DataSourceOutputSchema, S3PathConfi
             documents=[
                 DataDocument(
                     content=content if type(
-                        content) == bytes else content.encode('utf-8'),
+                        content,
+                    ) == bytes else content.encode('utf-8'),
                     context_text=content if type(
-                        content) == str else content.decode('utf-8'),
+                        content,
+                    ) == str else content.decode('utf-8'),
                     metadata={
-                        'file_name': f'{input.bucket}/{input.path}', **request_metadata}
-                )
-            ]
+                        'file_name': f'{input.bucket}/{input.path}', **request_metadata,
+                    },
+                ),
+            ],
         )

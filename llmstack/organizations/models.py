@@ -11,9 +11,8 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from llmstack.common.utils.db_models import ArrayField
-
 from llmstack.apps.models import AppVisibility
+from llmstack.common.utils.db_models import ArrayField
 
 
 class Organization(models.Model):

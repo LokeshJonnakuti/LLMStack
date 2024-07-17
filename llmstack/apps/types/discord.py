@@ -7,7 +7,8 @@ from nacl.signing import VerifyKey
 from pydantic import Field
 from rest_framework.exceptions import NotAuthenticated
 
-from llmstack.apps.models import App, AppData
+from llmstack.apps.models import App
+from llmstack.apps.models import AppData
 from llmstack.apps.types.app_type_interface import AppTypeInterface
 from llmstack.apps.types.app_type_interface import BaseSchema
 
@@ -70,7 +71,8 @@ class DiscordApp(AppTypeInterface[DiscordAppConfigSchema]):
             slash_command_name = config['slash_command_name']
             slash_command_options = []
             app_data = AppData.objects.filter(app_uuid=app.uuid, is_draft=False).order_by(
-                '-created_at').first() or AppData.objects.filter(app_uuid=app.uuid, is_draft=True).order_by('-created_at').first()
+                '-created_at',
+            ).first() or AppData.objects.filter(app_uuid=app.uuid, is_draft=True).order_by('-created_at').first()
             input_fields = app_data.data['input_fields']
 
             for input_field in input_fields:
@@ -90,25 +92,27 @@ class DiscordApp(AppTypeInterface[DiscordAppConfigSchema]):
             if config.get('slash_command_id'):
                 # Update the slash command
                 response = requests.patch(
-                    f'https://discord.com/api/v10/applications/{config.get("app_id")}/commands/{config.get("slash_command_id")}', json=body, headers={
-                        'Authorization': f'Bot {config.get("bot_token")}',
+                    f'https://discord.com/api/v10/applications/{config.get('app_id')}/commands/{config.get('slash_command_id')}', json=body, headers={
+                        'Authorization': f'Bot {config.get('bot_token')}',
                     },
                 )
                 if not response.ok:
                     logger.error(
-                        f'Failed to update slash command, Error: {response.text}')
+                        f'Failed to update slash command, Error: {response.text}',
+                    )
                     raise Exception('Failed to update slash command')
 
             else:
                 # Create the slash command
                 response = requests.post(
-                    f'https://discord.com/api/v10/applications/{config.get("app_id")}/commands', json=body, headers={
-                        'Authorization': f'Bot {config.get("bot_token")}',
+                    f'https://discord.com/api/v10/applications/{config.get('app_id')}/commands', json=body, headers={
+                        'Authorization': f'Bot {config.get('bot_token')}',
                     },
                 )
                 if not response.ok:
                     logger.error(
-                        f'Failed to update slash command, Error: {response.text}')
+                        f'Failed to update slash command, Error: {response.text}',
+                    )
                     raise Exception('Failed to update slash command')
 
                 config['slash_command_id'] = response.json()['id']
@@ -126,7 +130,7 @@ class DiscordApp(AppTypeInterface[DiscordAppConfigSchema]):
             verify_key = VerifyKey(bytes.fromhex(public_key))
             try:
                 verify_key.verify(
-                    f'{timestamp}{raw_body.decode("utf-8")}'.encode(),
+                    f'{timestamp}{raw_body.decode('utf-8')}'.encode(),
                     bytes.fromhex(signature),
                 )
             except BadSignatureError:

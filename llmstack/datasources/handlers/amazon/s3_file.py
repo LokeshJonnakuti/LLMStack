@@ -7,15 +7,20 @@ from typing import Optional
 from pydantic import Field
 from pydantic import SecretStr
 
-from llmstack.common.blocks.data.source.s3_path import S3Path, S3PathInput, S3PathConfiguration
+from llmstack.base.models import Profile
+from llmstack.common.blocks.data.source.s3_path import S3Path
+from llmstack.common.blocks.data.source.s3_path import S3PathConfiguration
+from llmstack.common.blocks.data.source.s3_path import S3PathInput
 from llmstack.common.blocks.data.store.vectorstore import Document
 from llmstack.common.utils.splitter import CSVTextSplitter
-from llmstack.common.utils.text_extract import extract_text_from_b64_json
 from llmstack.common.utils.splitter import SpacyTextSplitter
+from llmstack.common.utils.text_extract import extract_text_from_b64_json
 from llmstack.common.utils.utils import validate_parse_data_uri
-from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem, DataSourceSchema, DataSourceProcessor, WEAVIATE_SCHEMA
+from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem
+from llmstack.datasources.handlers.datasource_processor import DataSourceProcessor
+from llmstack.datasources.handlers.datasource_processor import DataSourceSchema
+from llmstack.datasources.handlers.datasource_processor import WEAVIATE_SCHEMA
 from llmstack.datasources.models import DataSource
-from llmstack.base.models import Profile
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +125,8 @@ class S3FileDataSource(DataSourceProcessor[S3FileSchema]):
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key_secret,
                 region_name=region_name,
-            ))
+            ),
+        )
         document = result.documents[0]
 
         if document.metadata['HTTPHeader']['http_status_code'] != 200:
@@ -141,8 +147,10 @@ class S3FileDataSource(DataSourceProcessor[S3FileSchema]):
         mime_type, file_name, file_data = validate_parse_data_uri(data_url)
 
         data_source_entry = DataSourceEntryItem(
-            name=file_name, data={'mime_type': mime_type,
-                                  'file_name': file_name, 'file_data': file_data},
+            name=file_name, data={
+                'mime_type': mime_type,
+                'file_name': file_name, 'file_data': file_data,
+            },
         )
 
         return [data_source_entry]
