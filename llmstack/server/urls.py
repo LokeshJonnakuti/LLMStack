@@ -13,8 +13,10 @@ urlpatterns = [
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.GENERATEDFILES_ROOT and settings.GENERATEDFILES_URL:
-    urlpatterns += static(settings.GENERATEDFILES_URL,
-                          document_root=settings.GENERATEDFILES_ROOT)
+    urlpatterns += static(
+        settings.GENERATEDFILES_URL,
+        document_root=settings.GENERATEDFILES_ROOT,
+    )
 
 if settings.ADMIN_ENABLED:
     urlpatterns += [path('admin/', admin.site.urls)]

@@ -1,14 +1,17 @@
 import os
 import sys
+from os.path import abspath
+from os.path import dirname
+from os.path import join
 
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter
 from channels.routing import URLRouter
 from django.core.asgi import get_asgi_application
 from django.urls import path
-from os.path import dirname, abspath, join
 
-from llmstack.server.consumers import AppConsumer, ConnectionConsumer
+from llmstack.server.consumers import AppConsumer
+from llmstack.server.consumers import ConnectionConsumer
 
 
 BASE_DIR = dirname(dirname(abspath(__file__)))
@@ -25,8 +28,10 @@ application = ProtocolTypeRouter({
         URLRouter([
             path('ws/apps/<str:app_id>', AppConsumer.as_asgi()),
             path('ws/apps/<str:app_id>/<str:preview>', AppConsumer.as_asgi()),
-            path('ws/connections/<str:conn_id>/activate',
-                 ConnectionConsumer.as_asgi()),
+            path(
+                'ws/connections/<str:conn_id>/activate',
+                ConnectionConsumer.as_asgi(),
+            ),
         ]),
     ),
 })

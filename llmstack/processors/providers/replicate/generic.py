@@ -3,9 +3,10 @@ from typing import Optional
 
 from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
-from llmstack.processors.providers.replicate.utils import fetch_data_from_api
 from llmstack.common.utils.utils import get_key_or_raise
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.replicate.utils import fetch_data_from_api
 
 
 class GenericInput(ApiProcessorSchema):

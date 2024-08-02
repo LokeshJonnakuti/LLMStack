@@ -1,11 +1,12 @@
 import json
 import logging
-from pydantic import Field
+
 import requests
-
 from asgiref.sync import async_to_sync
+from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +20,10 @@ class PromptlyAppProcessorOutput(ApiProcessorSchema):
 
 
 class PromptlyAppProcessorConfiguration(ApiProcessorSchema):
-    app_id: str = Field(description='Promptly App Id',
-                        advanced_parameter=False, widget='appselect', required=True)
+    app_id: str = Field(
+        description='Promptly App Id',
+        advanced_parameter=False, widget='appselect', required=True,
+    )
 
 
 class PromptlyAppProcessor(ApiProcessorInterface[PromptlyAppProcessorInput, PromptlyAppProcessorOutput, PromptlyAppProcessorConfiguration]):
@@ -47,14 +50,14 @@ class PromptlyAppProcessor(ApiProcessorInterface[PromptlyAppProcessorInput, Prom
 
         output_stream = self._output_stream
         payload = {
-            "input": json.loads(self._input.input),
-            "stream": False,
+            'input': json.loads(self._input.input),
+            'stream': False,
         }
         headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Token " + PROMPTLY_TOKEN,
+            'Content-Type': 'application/json',
+            'Authorization': 'Token ' + PROMPTLY_TOKEN,
         }
-        response = requests.request("POST", url, headers=headers, json=payload)
+        response = requests.request('POST', url, headers=headers, json=payload)
         async_to_sync(output_stream.write)(
             PromptlyAppProcessorOutput(output=response.text.encode('utf8')),
         )

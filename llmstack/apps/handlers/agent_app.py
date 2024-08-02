@@ -1,13 +1,14 @@
 import asyncio
 import logging
+
 import orjson as json
 
 from llmstack.apps.handlers.app_runnner import AppRunner
 from llmstack.play.actor import ActorConfig
+from llmstack.play.actors.agent import AgentActor
 from llmstack.play.actors.bookkeeping import BookKeepingActor
 from llmstack.play.actors.input import InputActor
 from llmstack.play.actors.output import OutputActor
-from llmstack.play.actors.agent import AgentActor
 from llmstack.play.coordinator import Coordinator
 from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
 from llmstack.processors.providers.promptly.http_api import PromptlyHttpAPIProcessor
@@ -21,8 +22,10 @@ class AgentRunner(AppRunner):
         processor_classes = {}
 
         for processor_class in ApiProcessorInterface.__subclasses__():
-            processor_classes[(processor_class.provider_slug(),
-                               processor_class.slug())] = processor_class
+            processor_classes[(
+                processor_class.provider_slug(),
+                processor_class.slug(),
+            )] = processor_class
 
         for processor in self.app_data['processors'] if self.app_data and 'processors' in self.app_data else []:
             if (processor['provider_slug'], processor['processor_slug']) not in processor_classes:
@@ -52,18 +55,23 @@ class AgentRunner(AppRunner):
                 name='input', template_key='_inputs0', actor=InputActor, kwargs={'input_request': self.input_actor_request},
             ),
             ActorConfig(
-                name='agent', template_key='agent', actor=AgentActor, kwargs={'processor_configs': processor_configs, 'functions': self._get_processors_as_functions(), 'input': self.request.data.get('input', {}), 'env': self.app_owner_profile.get_vendor_env(), 'config': self.app_data['config']}
+                name='agent', template_key='agent', actor=AgentActor, kwargs={'processor_configs': processor_configs, 'functions': self._get_processors_as_functions(), 'input': self.request.data.get('input', {}), 'env': self.app_owner_profile.get_vendor_env(), 'config': self.app_data['config']},
             ),
             ActorConfig(
                 name='output', template_key='output',
                 dependencies=['_inputs0', 'agent'],
                 actor=OutputActor, kwargs={
-                    'template': self.app_data['output_template']['markdown']}
+                    'template': self.app_data['output_template']['markdown'],
+                },
             ),
         ]
 
-        actor_configs.extend(map(lambda x: ActorConfig(
-            name=x.name, template_key=x.template_key, actor=x.actor, dependencies=(x.dependencies + ['agent']), kwargs=x.kwargs), processor_actor_configs)
+        actor_configs.extend(
+            map(
+                lambda x: ActorConfig(
+                name=x.name, template_key=x.template_key, actor=x.actor, dependencies=(x.dependencies + ['agent']), kwargs=x.kwargs,
+                ), processor_actor_configs,
+            ),
         )
         actor_configs.append(
             ActorConfig(

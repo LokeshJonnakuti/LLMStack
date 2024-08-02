@@ -1,12 +1,15 @@
 import logging
 from enum import Enum
 from typing import Optional
-from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 
-from pydantic import Field
+from anthropic import AI_PROMPT
+from anthropic import Anthropic
+from anthropic import HUMAN_PROMPT
 from asgiref.sync import async_to_sync
+from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +24,8 @@ class CompletionsModel(str, Enum):
 
 class CompletionsInput(ApiProcessorSchema):
     prompt: str = Field(
-        default='', description='The prompt that you want Claude to complete.')
+        default='', description='The prompt that you want Claude to complete.',
+    )
 
 
 class CompletionsOutput(ApiProcessorSchema):
@@ -31,14 +35,20 @@ class CompletionsOutput(ApiProcessorSchema):
 
 
 class CompletionsConfiguration(ApiProcessorSchema):
-    model: CompletionsModel = Field(default=CompletionsModel.CLAUDE_2,
-                                    description='The model that will complete your prompt.',
-                                    advanced_parameter=False)
-    max_tokens_to_sample: int = Field(ge=1, default=256,
-                                      description='The maximum number of tokens to generate before stopping.',
-                                      advanced_parameter=False)
-    temperature: float = Field(default=0.0, description='Amount of randomness injected into the response.',
-                               multiple_of=0.1, ge=0.0, le=1.0, advanced_parameter=False)
+    model: CompletionsModel = Field(
+        default=CompletionsModel.CLAUDE_2,
+        description='The model that will complete your prompt.',
+        advanced_parameter=False,
+    )
+    max_tokens_to_sample: int = Field(
+        ge=1, default=256,
+        description='The maximum number of tokens to generate before stopping.',
+        advanced_parameter=False,
+    )
+    temperature: float = Field(
+        default=0.0, description='Amount of randomness injected into the response.',
+        multiple_of=0.1, ge=0.0, le=1.0, advanced_parameter=False,
+    )
 
 
 class CompletionsProcessor(ApiProcessorInterface[CompletionsInput, CompletionsOutput, CompletionsConfiguration]):
@@ -67,9 +77,10 @@ class CompletionsProcessor(ApiProcessorInterface[CompletionsInput, CompletionsOu
                 max_tokens_to_sample=self._config.max_tokens_to_sample,
                 model=self._config.model.value,
                 temperature=self._config.temperature,
-                stream=True):
+                stream=True,
+        ):
             async_to_sync(self._output_stream.write)(
-                CompletionsOutput(completion=chunk.completion)
+                CompletionsOutput(completion=chunk.completion),
             )
 
         output = self._output_stream.finalize()
