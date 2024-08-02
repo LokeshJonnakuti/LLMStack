@@ -31,7 +31,7 @@ FILE_WIDGET_NAME = 'file'
 
 
 def hydrate_input(input, values):
-    env = jinja2.Environment()
+    env = jinja2.Environment(autoescape=True)
 
     def render(value):
         if isinstance(value, str):
