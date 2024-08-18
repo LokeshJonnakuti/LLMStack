@@ -2,12 +2,15 @@
 Utils to convert yaml to App and AppTemplate schema models and vice versa
 """
 import os
-from typing import List, Type
+from typing import List
+from typing import Type
 
 import yaml
 from django.conf import settings
 from django.core.cache import cache
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel
+from pydantic import create_model
+from pydantic import Field
 
 from llmstack.apps.schemas import AppTemplate
 from llmstack.common.blocks.base.schema import get_ui_schema_from_json_schema
@@ -48,11 +51,11 @@ def get_input_model_from_fields(name: str, input_fields: list) -> Type['BaseMode
         if field_type == 'file':
             field['widget'] = 'file'
             field['format'] = 'data-url'
-            field['pattern'] = "data:(.*);name=(.*);base64,(.*)"
+            field['pattern'] = 'data:(.*);name=(.*);base64,(.*)'
         elif field_type == 'image':
             field['widget'] = 'file'
             field['format'] = 'data-url'
-            field['pattern'] = "data:(.*);name=(.*);base64,(.*)"
+            field['pattern'] = 'data:(.*);name=(.*);base64,(.*)'
         elif field_type == 'text':
             field['widget'] = 'textarea'
         elif field_type == 'richtext':
@@ -68,7 +71,7 @@ def get_input_model_from_fields(name: str, input_fields: list) -> Type['BaseMode
         elif field_type == 'voice':
             field['widget'] = 'voice'
             field['format'] = 'data-url'
-            field['pattern'] = "data:(.*);name=(.*);base64,(.*)"
+            field['pattern'] = 'data:(.*);name=(.*);base64,(.*)'
 
         if field_type == 'select' and 'options' in field and len(field['options']) > 0:
             field['widget'] = 'select'
@@ -76,8 +79,11 @@ def get_input_model_from_fields(name: str, input_fields: list) -> Type['BaseMode
             # For select fields, the datatype is the type of the first option
             datatype = type(field['options'][0]['value'])
 
-        fields[field['name']] = (datatype, Field(
-            **{k: field[k] for k in field}))
+        fields[field['name']] = (
+            datatype, Field(
+            **{k: field[k] for k in field},
+            ),
+        )
 
     return create_model(f'{name}', **fields)
 
@@ -100,10 +106,12 @@ def get_app_template_from_yaml(yaml_file: str) -> dict:
         for page in pages:
             input_fields = page.get('input_fields', [])
             input_model = get_input_model_from_fields(
-                page["title"], input_fields)
+                page['title'], input_fields,
+            )
             page['input_schema'] = input_model.schema()
             page['input_ui_schema'] = get_ui_schema_from_json_schema(
-                input_model.schema())
+                input_model.schema(),
+            )
             page.pop('input_fields')
 
         return AppTemplate(**yaml_dict)
@@ -125,7 +133,8 @@ def get_app_templates_from_contrib() -> List[AppTemplate]:
         for file in os.listdir(settings.APP_TEMPLATES_DIR):
             if file.endswith('.yml'):
                 app_template = get_app_template_from_yaml(
-                    os.path.join(settings.APP_TEMPLATES_DIR, file))
+                    os.path.join(settings.APP_TEMPLATES_DIR, file),
+                )
                 if app_template:
                     app_templates.append(app_template)
 
@@ -136,7 +145,8 @@ def get_app_templates_from_contrib() -> List[AppTemplate]:
             for file in os.listdir(dir):
                 if file.endswith('.yml'):
                     app_template = get_app_template_from_yaml(
-                        os.path.join(dir, file))
+                        os.path.join(dir, file),
+                    )
                     if app_template:
                         app_templates.append(app_template)
 

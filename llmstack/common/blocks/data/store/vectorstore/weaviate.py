@@ -152,7 +152,8 @@ class Weaviate(VectorStoreInterface):
             self._client = weaviate.Client(
                 url=configuration.url,
                 auth_client_secret=weaviate.AuthClientPassword(
-                    username=configuration.username, password=configuration.password),
+                    username=configuration.username, password=configuration.password,
+                ),
                 additional_headers=headers,
                 timeout_config=(2, 20),
             )
@@ -160,7 +161,8 @@ class Weaviate(VectorStoreInterface):
             self._client = weaviate.Client(
                 url=configuration.url,
                 auth_client_secret=weaviate.AuthApiKey(
-                    api_key=configuration.api_key),
+                    api_key=configuration.api_key,
+                ),
                 additional_headers=headers,
                 timeout_config=(2, 20),
             )
@@ -240,7 +242,8 @@ class Weaviate(VectorStoreInterface):
     def get_document_by_id(self, index_name: str, document_id: str, content_key: str):
         try:
             result = self.client.data_object.get(
-                uuid=document_id, class_name=index_name)
+                uuid=document_id, class_name=index_name,
+            )
 
             return Document(content_key, result['properties'].get(content_key, None), {k: v for k, v in result['properties'].items() if k != content_key})
         except weaviate.exceptions.UnexpectedStatusCodeException as e:
@@ -257,7 +260,8 @@ class Weaviate(VectorStoreInterface):
         for key in document_query.metadata.get('additional_properties', []):
             properties.append(key)
         additional_metadata_properties = document_query.metadata.get(
-            'metadata_properties', ['id', 'certainty', 'distance'])
+            'metadata_properties', ['id', 'certainty', 'distance'],
+        )
 
         if kwargs.get('search_distance'):
             nearText['certainty'] = kwargs.get('search_distance')
@@ -307,7 +311,8 @@ class Weaviate(VectorStoreInterface):
             result.append(
                 Document(
                     page_content_key=document_query.page_content_key, page_content=text, metadata={
-                        **additional_properties, **_document_search_properties},
+                        **additional_properties, **_document_search_properties,
+                    },
                 ),
             )
 
@@ -365,7 +370,8 @@ class Weaviate(VectorStoreInterface):
             result.append(
                 Document(
                     page_content_key=document_query.page_content_key, page_content=text, metadata={
-                        **additional_properties, **_document_search_properties},
+                        **additional_properties, **_document_search_properties,
+                    },
                 ),
             )
 

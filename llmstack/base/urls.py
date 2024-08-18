@@ -1,11 +1,11 @@
 from allauth.account.views import login
 from allauth.account.views import logout
+from django.conf import settings
 from django.urls import include
 from django.urls import path
 from django.urls import re_path
-from .apis import ProfileViewSet
 
-from django.conf import settings
+from .apis import ProfileViewSet
 
 index_module = __import__(settings.INDEX_VIEW_MODULE, fromlist=[''])
 index_view = getattr(index_module, 'index')

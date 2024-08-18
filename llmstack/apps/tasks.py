@@ -2,13 +2,14 @@ import logging
 import uuid
 from typing import List
 
+import weaviate
+
 from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem
 from llmstack.datasources.handlers.datasource_processor import DataSourceProcessor
 from llmstack.datasources.models import DataSource
 from llmstack.datasources.models import DataSourceEntry
 from llmstack.datasources.models import DataSourceEntryStatus
 from llmstack.datasources.types import DataSourceTypeFactory
-import weaviate
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def add_data_entry_task(datasource: DataSource, datasource_entry_items: List[Dat
         try:
             result = datasource_entry_handler.add_entry(datasource_entry_item)
             datasource_entry_config = result.config
-            datasource_entry_config["input"] = datasource_entry_item.dict()
+            datasource_entry_config['input'] = datasource_entry_item.dict()
             datasource_entry_object.config = datasource_entry_config
             datasource_entry_object.size = result.size
             datasource_entry_object.status = DataSourceEntryStatus.READY
@@ -73,7 +74,7 @@ def delete_data_entry_task(datasource: DataSource, entry_data: DataSourceEntry):
         )
         entry_data.delete()
     except weaviate.exceptions.UnexpectedStatusCodeException:
-        logger.exception("Error deleting data source entry from weaviate")
+        logger.exception('Error deleting data source entry from weaviate')
         entry_data.delete()
     except Exception as e:
         logger.exception(
@@ -81,8 +82,11 @@ def delete_data_entry_task(datasource: DataSource, entry_data: DataSourceEntry):
             str(entry_data.name),
         )
         entry_data.status = DataSourceEntryStatus.FAILED
-        entry_data.config = {'errors': {
-            'message': "Error in deleting data source entry"}}
+        entry_data.config = {
+            'errors': {
+            'message': 'Error in deleting data source entry',
+            },
+        }
         entry_data.save()
 
     datasource.save()
@@ -105,7 +109,7 @@ def resync_data_entry_task(datasource: DataSource, entry_data: DataSourceEntry):
     result = datasource_entry_handler.resync_entry(entry_data.config)
     entry_data.size = result.size
     config_entry = result.config
-    config_entry["input"] = entry_data.config["input"]
+    config_entry['input'] = entry_data.config['input']
     entry_data.config = config_entry
     entry_data.status = DataSourceEntryStatus.READY
     entry_data.save()

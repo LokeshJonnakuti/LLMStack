@@ -2,10 +2,11 @@ import logging
 from typing import Any
 
 from llmstack.apps.app_session_utils import save_app_session_data
-from llmstack.play.actor import Actor
-from llmstack.play.output_stream import Message, MessageType
-from llmstack.processors.tasks import persist_history_task
 from llmstack.jobs.adhoc import HistoryPersistenceJob
+from llmstack.play.actor import Actor
+from llmstack.play.output_stream import Message
+from llmstack.play.output_stream import MessageType
+from llmstack.processors.tasks import persist_history_task
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,8 @@ class BookKeepingActor(Actor):
         if message.message_type == MessageType.BOOKKEEPING:
             if message.message_id:
                 self._bookkeeping_data_map[message.message_from] = self._bookkeeping_data_map[message.message_from] + [
-                    message.message] if message.message_from in self._bookkeeping_data_map else [message.message]
+                    message.message,
+                ] if message.message_from in self._bookkeeping_data_map else [message.message]
             else:
                 self._bookkeeping_data_map[message.message_from] = message.message
 
@@ -46,8 +48,9 @@ class BookKeepingActor(Actor):
         try:
             HistoryPersistenceJob.create(
                 func=persist_history_task, args=[
-                    list(self._processor_configs.keys()
-                         ), self._bookkeeping_data_map,
+                    list(
+                        self._processor_configs.keys(),
+                    ), self._bookkeeping_data_map,
                 ],
             ).add_to_queue()
         except Exception as e:

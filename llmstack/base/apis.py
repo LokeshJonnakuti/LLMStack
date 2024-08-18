@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from flags.sources import get_flags
@@ -14,7 +15,6 @@ from rest_framework.response import Response as DRFResponse
 from .models import Profile
 from .serializers import ProfileSerializer
 from llmstack.apps.models import App
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 

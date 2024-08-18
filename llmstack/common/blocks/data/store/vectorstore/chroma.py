@@ -1,14 +1,17 @@
 import logging
-from typing import Any, Tuple
-from typing import List
-from uuid import uuid4
 import uuid
+from typing import Any
+from typing import List
+from typing import Tuple
+from uuid import uuid4
 
 import chromadb
-from pydantic import BaseModel
 from django.conf import settings
+from pydantic import BaseModel
 
-from llmstack.common.blocks.data.store.vectorstore import Document, DocumentQuery, VectorStoreInterface
+from llmstack.common.blocks.data.store.vectorstore import Document
+from llmstack.common.blocks.data.store.vectorstore import DocumentQuery
+from llmstack.common.blocks.data.store.vectorstore import VectorStoreInterface
 
 
 class ChromaConfiguration(BaseModel):
@@ -85,8 +88,11 @@ class Chroma(VectorStoreInterface):
                 'documents', 'metadatas', 'embeddings',
             ],
         )
-        return Document(content_key, result['documents'][0] if len(result['documents']) > 0 else None, {
-            **result['metadatas'][0]} if len(result['metadatas']) > 0 else None)
+        return Document(
+            content_key, result['documents'][0] if len(result['documents']) > 0 else None, {
+            **result['metadatas'][0],
+            } if len(result['metadatas']) > 0 else None,
+        )
 
     def hybrid_search(self, index_name: str, document_query: DocumentQuery, **kwargs) -> List[Tuple[int, float]]:
         return self.similarity_search(index_name, document_query, **kwargs)
@@ -101,7 +107,8 @@ class Chroma(VectorStoreInterface):
             document_content = search_result['documents'][index][0]
             metadata = search_result['metadatas'][index][0]
             metadata['distance'] = search_result['distances'][index][0] if len(
-                search_result['distances']) > 0 else -1
+                search_result['distances'],
+            ) > 0 else -1
             result.append(
                 Document('', document_content, metadata),
             )

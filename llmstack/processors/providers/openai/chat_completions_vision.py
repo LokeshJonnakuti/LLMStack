@@ -1,20 +1,25 @@
 import importlib
 import logging
 from enum import Enum
-from typing import Annotated, List, Literal, Optional, Union
+from typing import Annotated
+from typing import List
+from typing import Literal
+from typing import Optional
+from typing import Union
 
 import openai
 from asgiref.sync import async_to_sync
 from openai import OpenAI
-from pydantic import BaseModel, Field, confloat, conint
+from pydantic import BaseModel
+from pydantic import confloat
+from pydantic import conint
+from pydantic import Field
 
 from llmstack.common.blocks.llm.openai import (
     OpenAIChatCompletionsAPIProcessorConfiguration,
 )
-from llmstack.processors.providers.api_processor_interface import (
-    ApiProcessorInterface,
-    ApiProcessorSchema,
-)
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -36,21 +41,25 @@ class ChatCompletionsVisionModel(str, Enum):
 
 
 class TextMessage(BaseModel):
-    type: Literal["text"]
+    type: Literal['text']
 
     text: str = Field(
-        default='', description='The message text.')
+        default='', description='The message text.',
+    )
 
 
 class UrlImageMessage(BaseModel):
-    type: Literal["image_url"]
+    type: Literal['image_url']
 
     image_url: str = Field(
-        default='', description='The image data URI.')
+        default='', description='The image data URI.',
+    )
 
 
-Message = Annotated[Union[TextMessage, UrlImageMessage],
-                    Field(discriminator='type')]
+Message = Annotated[
+    Union[TextMessage, UrlImageMessage],
+    Field(discriminator='type'),
+]
 
 
 class ChatMessage(ApiProcessorSchema):
@@ -58,7 +67,8 @@ class ChatMessage(ApiProcessorSchema):
         default=Role.USER, description="The role of the message sender. Can be 'user' or 'assistant' or 'system'.",
     )
     content: List[Union[TextMessage, UrlImageMessage]] = Field(
-        default=[], description='The message text.')
+        default=[], description='The message text.',
+    )
 
 
 class ChatCompletionsVisionInput(ApiProcessorSchema):
@@ -66,7 +76,7 @@ class ChatCompletionsVisionInput(ApiProcessorSchema):
         default='', description='A message from the system, which will be prepended to the chat history.', widget='textarea',
     )
     messages:  List[Message] = Field(
-        default=[], description='A list of messages, each with a role and message text.'
+        default=[], description='A list of messages, each with a role and message text.',
     )
 
 
@@ -136,13 +146,17 @@ class ChatCompletionsVision(ApiProcessorInterface[ChatCompletionsVisionInput, Ch
         chat_history = self._chat_history if self._config.retain_history else []
         messages = []
         messages.append(
-            {'role': 'system', 'content': self._input.system_message})
+            {'role': 'system', 'content': self._input.system_message},
+        )
 
         for msg in chat_history:
             messages.append(msg)
 
-        messages.append({'role': 'user', 'content': [
-                        msg.dict() for msg in self._input.messages]})
+        messages.append({
+            'role': 'user', 'content': [
+            msg.dict() for msg in self._input.messages
+            ],
+        })
 
         openai_client = OpenAI(api_key=self._env['openai_api_key'])
         result = openai_client.chat.completions.create(
@@ -156,8 +170,9 @@ class ChatCompletionsVision(ApiProcessorInterface[ChatCompletionsVisionInput, Ch
             if data.object == 'chat.completion.chunk' and len(data.choices) > 0 and data.choices[0].delta and data.choices[0].delta.content:
                 async_to_sync(output_stream.write)(
                     ChatCompletionsVisionOutput(
-                        result=data.choices[0].delta.content
-                    ))
+                        result=data.choices[0].delta.content,
+                    ),
+                )
 
         output = self._output_stream.finalize()
 
