@@ -1,12 +1,13 @@
 from pydantic import Field
+
 from llmstack.common.blocks.base.schema import BaseSchema
-from llmstack.connections.types import ConnectionTypeInterface
 from llmstack.connections.models import ConnectionType
+from llmstack.connections.types import ConnectionTypeInterface
 
 class BasicAuthenticationConfiguration(BaseSchema):
     username: str
     password: str
-    
+
 class BasicAuthenticationBasedAPILogin(ConnectionTypeInterface[BasicAuthenticationConfiguration]):
     @staticmethod
     def name() -> str:
@@ -23,7 +24,7 @@ class BasicAuthenticationBasedAPILogin(ConnectionTypeInterface[BasicAuthenticati
     @staticmethod
     def description() -> str:
         return 'Basic Authentication based API Login'
-    
+
     @staticmethod
     def type() -> ConnectionType:
         return ConnectionType.CREDENTIALS

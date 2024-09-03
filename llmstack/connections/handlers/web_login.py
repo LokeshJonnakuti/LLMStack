@@ -1,33 +1,36 @@
 import asyncio
 import logging
-from typing import Iterator, Union
+from typing import Iterator
+from typing import Union
 
 import grpc
 from django.conf import settings
 from pydantic import Field
 
-from llmstack.common.runner.proto import runner_pb2, runner_pb2_grpc
-from llmstack.connections.models import (
-    Connection,
-    ConnectionActivationInput,
-    ConnectionActivationOutput,
-    ConnectionStatus,
-)
-from llmstack.connections.types import  ConnectionTypeInterface
 from llmstack.common.blocks.base.schema import BaseSchema
+from llmstack.common.runner.proto import runner_pb2
+from llmstack.common.runner.proto import runner_pb2_grpc
+from llmstack.connections.models import Connection
+from llmstack.connections.models import ConnectionActivationInput
+from llmstack.connections.models import ConnectionActivationOutput
+from llmstack.connections.models import ConnectionStatus
 from llmstack.connections.models import ConnectionType
+from llmstack.connections.types import  ConnectionTypeInterface
 
 logger = logging.getLogger(__name__)
 
 
 class WebLoginBaseConfiguration(BaseSchema):
     _storage_state: str = Field(
-        description='Storage state', widget='textarea', hidden=True)
+        description='Storage state', widget='textarea', hidden=True,
+    )
 
 
 class WebLoginConfiguration(WebLoginBaseConfiguration):
-    start_url: str = Field(description='URL to login to',
-                           default='https://google.com')
+    start_url: str = Field(
+        description='URL to login to',
+        default='https://google.com',
+    )
 
 
 class WebLogin(ConnectionTypeInterface[WebLoginConfiguration]):
@@ -46,7 +49,7 @@ class WebLogin(ConnectionTypeInterface[WebLoginConfiguration]):
     @staticmethod
     def description() -> str:
         return 'Login to a website'
-    
+
     @staticmethod
     def type() -> ConnectionType:
         return ConnectionType.BROWSER_LOGIN
@@ -56,9 +59,13 @@ class WebLogin(ConnectionTypeInterface[WebLoginConfiguration]):
             self._is_terminated = True
 
     async def _request_iterator(self, connection, timeout):
-        yield runner_pb2.RemoteBrowserRequest(init_data=runner_pb2.BrowserInitData(url=connection.configuration['start_url'],
-                                                                                   terminate_url_pattern='',
-                                                                                   timeout=timeout, persist_session=True))
+        yield runner_pb2.RemoteBrowserRequest(
+            init_data=runner_pb2.BrowserInitData(
+                url=connection.configuration['start_url'],
+                terminate_url_pattern='',
+                timeout=timeout, persist_session=True,
+            ),
+        )
 
         # Sleep till timeout or self._is_terminated is True
         time_elapsed = 0
@@ -90,7 +97,8 @@ class WebLogin(ConnectionTypeInterface[WebLoginConfiguration]):
                 else:
                     # An actual error occurred, log or re-raise
                     logger.error(
-                        f'RPC error occurred: {e.code()} - {e.details()}')
+                        f'RPC error occurred: {e.code()} - {e.details()}',
+                    )
                     raise
             except asyncio.CancelledError:
                 # The task was cancelled, so exit the loop
@@ -105,7 +113,8 @@ class WebLogin(ConnectionTypeInterface[WebLoginConfiguration]):
 
     async def activate(self, connection) -> Iterator[Union[Connection, dict]]:
         self.channel = grpc.aio.insecure_channel(
-            f'{settings.RUNNER_HOST}:{settings.RUNNER_PORT}')
+            f'{settings.RUNNER_HOST}:{settings.RUNNER_PORT}',
+        )
         stub = runner_pb2_grpc.RunnerStub(self.channel)
         self._input_index = 0
         self._input_instructions = []
@@ -113,7 +122,8 @@ class WebLogin(ConnectionTypeInterface[WebLoginConfiguration]):
         timeout = 120
 
         self.remote_browser_stream = stub.GetRemoteBrowser(
-            self._request_iterator(connection, timeout))
+            self._request_iterator(connection, timeout),
+        )
 
         first_message = await self.remote_browser_stream.read()
 

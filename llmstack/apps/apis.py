@@ -6,7 +6,8 @@ from channels.db import database_sync_to_async
 from django.core.validators import validate_email
 from django.db.models import Q
 from django.forms import ValidationError
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -19,11 +20,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response as DRFResponse
 
-from llmstack.processors.apis import EndpointViewSet
-from llmstack.processors.providers.api_processors import ApiProcessorFactory
-
-from .models import App, AppData
+from .models import App
 from .models import AppAccessPermission
+from .models import AppData
 from .models import AppHub
 from .models import AppRunGraphEntry
 from .models import AppTemplate
@@ -31,7 +30,8 @@ from .models import AppType
 from .models import AppVisibility
 from .models import TestCase
 from .models import TestSet
-from .serializers import AppDataSerializer, AppHubSerializer
+from .serializers import AppDataSerializer
+from .serializers import AppHubSerializer
 from .serializers import AppSerializer
 from .serializers import AppTemplateSerializer
 from .serializers import AppTypeSerializer
@@ -39,13 +39,17 @@ from .serializers import CloneableAppSerializer
 from .serializers import TestCaseSerializer
 from .serializers import TestSetSerializer
 from llmstack.apps.handlers.app_runner_factory import AppRunerFactory
-from llmstack.apps.integration_configs import DiscordIntegrationConfig, TwilioIntegrationConfig
+from llmstack.apps.integration_configs import DiscordIntegrationConfig
 from llmstack.apps.integration_configs import SlackIntegrationConfig
+from llmstack.apps.integration_configs import TwilioIntegrationConfig
 from llmstack.apps.integration_configs import WebIntegrationConfig
+from llmstack.apps.yaml_loader import get_app_template_by_slug
+from llmstack.apps.yaml_loader import get_app_templates_from_contrib
+from llmstack.base.models import Profile
 from llmstack.emails.sender import EmailSender
 from llmstack.emails.templates.factory import EmailTemplateFactory
-from llmstack.base.models import Profile
-from llmstack.apps.yaml_loader import get_app_template_by_slug, get_app_templates_from_contrib
+from llmstack.processors.apis import EndpointViewSet
+from llmstack.processors.providers.api_processors import ApiProcessorFactory
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +115,15 @@ class AppViewSet(viewsets.ViewSet):
             app = get_object_or_404(
                 App,
                 Q(uuid=uuid.UUID(uid), owner=request.user) |
-                Q(uuid=uuid.UUID(uid), read_accessible_by__contains=[
-                  request.user.email], is_published=True) | Q(uuid=uuid.UUID(uid), write_accessible_by__contains=[
-                      request.user.email], is_published=True),
+                Q(
+                    uuid=uuid.UUID(uid), read_accessible_by__contains=[
+                    request.user.email,
+                    ], is_published=True,
+                ) | Q(
+                    uuid=uuid.UUID(uid), write_accessible_by__contains=[
+                    request.user.email,
+                    ], is_published=True,
+                ),
             )
             serializer = AppSerializer(
                 instance=app, fields=fields, request_user=request.user,
@@ -132,8 +142,8 @@ class AppViewSet(viewsets.ViewSet):
             fields = fields.split(',')
 
         queryset = App.objects.all().filter(
-            Q(read_accessible_by__contains=[request.user.email,]) |
-            Q(write_accessible_by__contains=[request.user.email,]), is_published=True,
+            Q(read_accessible_by__contains=[request.user.email]) |
+            Q(write_accessible_by__contains=[request.user.email]), is_published=True,
         ).order_by('-last_updated_at')
         serializer = AppSerializer(
             queryset, many=True, fields=fields, request_user=request.user,
@@ -149,13 +159,16 @@ class AppViewSet(viewsets.ViewSet):
         app = get_object_or_404(
             App,
             Q(uuid=uuid.UUID(uid), owner=request.user) |
-            Q(uuid=uuid.UUID(uid), write_accessible_by__contains=[
-                request.user.email], is_published=True),
+            Q(
+                uuid=uuid.UUID(uid), write_accessible_by__contains=[
+                request.user.email,
+                ], is_published=True,
+            ),
         )
 
         if version:
             versioned_app_data = AppData.objects.filter(
-                app_uuid=app.uuid, version=version, is_draft=draft
+                app_uuid=app.uuid, version=version, is_draft=draft,
             ).first()
             if versioned_app_data:
                 return DRFResponse(AppDataSerializer(versioned_app_data, context={'hide_details': False}).data)
@@ -163,7 +176,8 @@ class AppViewSet(viewsets.ViewSet):
                 return DRFResponse(status=404, data={'message': 'Version not found'})
         else:
             queryset = AppData.objects.all().filter(
-                app_uuid=app.uuid).order_by('-created_at')
+                app_uuid=app.uuid,
+            ).order_by('-created_at')
             serializer = AppDataSerializer(queryset, many=True)
             return DRFResponse(serializer.data)
 
@@ -183,7 +197,7 @@ class AppViewSet(viewsets.ViewSet):
                 (
                         request.user.is_authenticated and ((app.visibility == AppVisibility.ORGANIZATION and Profile.objects.get(user=app.owner).organization == Profile.objects.get(user=request.user).organization) or
                                                            (request.user.email in app.read_accessible_by or request.user.email in app.write_accessible_by))
-                    ):
+                ):
                 serializer = AppSerializer(
                     instance=app, request_user=request.user,
                 )
@@ -262,7 +276,8 @@ class AppViewSet(viewsets.ViewSet):
                     app_template_dict.pop('pages')
                     app = app_template_dict.pop('app')
                     json_data.append(
-                        {**app_template_dict, **{"app": {"type_slug": app["type_slug"]}}})
+                        {**app_template_dict, **{'app': {'type_slug': app['type_slug']}}},
+                    )
 
         return DRFResponse(json_data)
 
@@ -312,17 +327,18 @@ class AppViewSet(viewsets.ViewSet):
             new_emails = list(
                 set(app.read_accessible_by).union(set(app.write_accessible_by)) -
                 set(old_read_accessible_by).union(
-                    set(old_write_accessible_by)),
+                    set(old_write_accessible_by),
+                ),
             )
 
             # Send email to new users
             # TODO: Use multisend to send emails in bulk
             for new_email in new_emails:
                 email_template_cls = EmailTemplateFactory.get_template_by_name(
-                    'app_shared'
+                    'app_shared',
                 )
                 share_email = email_template_cls(
-                    uuid=app.uuid, published_uuid=app.published_uuid, app_name=app.name, owner_first_name=app.owner.first_name, owner_email=app.owner.email, can_edit=app.access_permission == AppAccessPermission.WRITE, share_to=new_email
+                    uuid=app.uuid, published_uuid=app.published_uuid, app_name=app.name, owner_first_name=app.owner.first_name, owner_email=app.owner.email, can_edit=app.access_permission == AppAccessPermission.WRITE, share_to=new_email,
                 )
                 share_email_sender = EmailSender(share_email)
                 share_email_sender.send()
@@ -334,10 +350,11 @@ class AppViewSet(viewsets.ViewSet):
         # Send app published email if the app was not published before
         if app_newly_published:
             email_template_cls = EmailTemplateFactory.get_template_by_name(
-                'app_published'
+                'app_published',
             )
             app_published_email = email_template_cls(
-                app_name=app.name, owner_first_name=app.owner.first_name, owner_email=app.owner.email, published_uuid=app.published_uuid)
+                app_name=app.name, owner_first_name=app.owner.first_name, owner_email=app.owner.email, published_uuid=app.published_uuid,
+            )
             published_email_sender = EmailSender(app_published_email)
             published_email_sender.send()
 
@@ -363,8 +380,14 @@ class AppViewSet(viewsets.ViewSet):
 
         # Cleanup app run_graph
         run_graph_entries = app.run_graph.all()
-        endpoint_entries = list(filter(lambda x: x != None, set(list(map(lambda x: x.entry_endpoint, run_graph_entries)) +
-                                                                list(map(lambda x: x.exit_endpoint, run_graph_entries)))))
+        endpoint_entries = list(
+            filter(
+                lambda x: x != None, set(
+                    list(map(lambda x: x.entry_endpoint, run_graph_entries)) +
+                    list(map(lambda x: x.exit_endpoint, run_graph_entries)),
+                ),
+            ),
+        )
 
         # Cleanup rungraph
         # Delete all the run_graph entries
@@ -372,14 +395,18 @@ class AppViewSet(viewsets.ViewSet):
 
         app_run_graph_entries = AppRunGraphEntry.objects.filter(
             Q(entry_endpoint__in=endpoint_entries) | Q(
-                exit_endpoint__in=endpoint_entries),
+                exit_endpoint__in=endpoint_entries,
+            ),
         )
         app_run_graph_entries.delete()
 
         # Delete all the endpoint entries
         for entry in endpoint_entries:
-            EndpointViewSet.delete(self, request, id=str(
-                entry.parent_uuid), force_delete_app=True)
+            EndpointViewSet.delete(
+                self, request, id=str(
+                entry.parent_uuid,
+                ), force_delete_app=True,
+            )
 
         app.delete()
 
@@ -412,7 +439,7 @@ class AppViewSet(viewsets.ViewSet):
         ) if 'twilio_config' in request.data and request.data['twilio_config'] else {}
         draft = request.data['draft'] if 'draft' in request.data else True
         comment = request.data['comment'] if 'comment' in request.data else ''
-        
+
         processors_data = request.data['processors'] if 'processors' in request.data else []
         processed_processors_data = []
         try:
@@ -431,10 +458,11 @@ class AppViewSet(viewsets.ViewSet):
             'config': request.data['config'] if 'config' in request.data else {},
             'input_fields': request.data['input_fields'] if 'input_fields' in request.data else [],
             'output_template': request.data['output_template'] if 'output_template' in request.data else {},
-            'processors': processed_processors_data
+            'processors': processed_processors_data,
         }
         versioned_app_data = AppData.objects.filter(
-            app_uuid=app.uuid, is_draft=True).first()
+            app_uuid=app.uuid, is_draft=True,
+        ).first()
         if versioned_app_data:
             versioned_app_data.comment = comment
             versioned_app_data.data = app_data
@@ -443,7 +471,8 @@ class AppViewSet(viewsets.ViewSet):
         else:
             # Find the total number of published versions
             published_versions = AppData.objects.filter(
-                app_uuid=app.uuid, is_draft=False).count()
+                app_uuid=app.uuid, is_draft=False,
+            ).count()
             AppData.objects.create(
                 app_uuid=app.uuid, data=app_data, comment=comment, is_draft=draft, version=published_versions,
             )
@@ -457,7 +486,8 @@ class AppViewSet(viewsets.ViewSet):
         owner = request.user
         app_type_slug = request.data['app_type_slug'] if 'app_type_slug' in request.data else None
         app_type = get_object_or_404(AppType, id=request.data['app_type']) if 'app_type' in request.data else get_object_or_404(
-            AppType, slug=app_type_slug)
+            AppType, slug=app_type_slug,
+        )
         app_name = request.data['name']
         app_description = request.data['description'] if 'description' in request.data else ''
         app_config = request.data['config'] if 'config' in request.data else {}
@@ -532,15 +562,18 @@ class AppViewSet(viewsets.ViewSet):
 
         if (flag_enabled('HAS_EXCEEDED_MONTHLY_PROCESSOR_RUN_QUOTA', request=request, user=app.owner)):
             raise Exception(
-                'You have exceeded your monthly processor run quota. Please upgrade your plan to continue using the platform.')
+                'You have exceeded your monthly processor run quota. Please upgrade your plan to continue using the platform.',
+            )
 
         app_data_obj = AppData.objects.filter(
-            app_uuid=app.uuid, is_draft=preview).order_by('-created_at').first()
+            app_uuid=app.uuid, is_draft=preview,
+        ).order_by('-created_at').first()
 
         # If we are running a published app, use the published app data
         if not app_data_obj and preview:
             app_data_obj = AppData.objects.filter(
-                app_uuid=app.uuid, is_draft=False).order_by('-created_at').first()
+                app_uuid=app.uuid, is_draft=False,
+            ).order_by('-created_at').first()
 
         app_runner_class = None
         if platform == 'discord':
@@ -669,7 +702,8 @@ class AppTestSetViewSet(viewsets.ModelViewSet):
         testcase = TestCase.objects.create(
             testset=testset,
             input_data=request.data['input_data'], expected_output=request.data[
-                'expected_output'] if 'expected_output' in request.data else '',
+                'expected_output'
+            ] if 'expected_output' in request.data else '',
         )
 
         return DRFResponse(TestCaseSerializer(instance=testcase).data, status=201)

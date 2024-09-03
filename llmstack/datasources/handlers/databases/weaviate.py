@@ -1,16 +1,21 @@
 import json
 import logging
-
-from typing import Dict, List
+from typing import Dict
+from typing import List
 from typing import Optional
 
 from pydantic import Field
 
 from llmstack.common.blocks.base.schema import BaseSchema as _Schema
-from llmstack.common.blocks.data.store.vectorstore import Document, DocumentQuery
-from llmstack.common.blocks.data.store.vectorstore.weaviate import Weaviate, WeaviateConfiguration, generate_where_filter
+from llmstack.common.blocks.data.store.vectorstore import Document
+from llmstack.common.blocks.data.store.vectorstore import DocumentQuery
+from llmstack.common.blocks.data.store.vectorstore.weaviate import generate_where_filter
+from llmstack.common.blocks.data.store.vectorstore.weaviate import Weaviate
+from llmstack.common.blocks.data.store.vectorstore.weaviate import WeaviateConfiguration
 from llmstack.common.utils.models import Config
-from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem, DataSourceSchema, DataSourceProcessor
+from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem
+from llmstack.datasources.handlers.datasource_processor import DataSourceProcessor
+from llmstack.datasources.handlers.datasource_processor import DataSourceSchema
 from llmstack.datasources.models import DataSource
 
 
@@ -31,7 +36,8 @@ class WeaviateConnection(_Schema):
     password: Optional[str] = Field(description='Weaviate password')
     api_key: Optional[str] = Field(description='Weaviate API key')
     additional_headers: Optional[str] = Field(
-        description='Weaviate headers. Please enter a JSON string.', widget='textarea', default='{}')
+        description='Weaviate headers. Please enter a JSON string.', widget='textarea', default='{}',
+    )
 
 # This class is a definition of the Weaviate database schema.
 # `index_name`: This is a required string attribute representing the name of the weaviate index.
@@ -46,11 +52,14 @@ class WeaviateConnection(_Schema):
 class WeaviateDatabaseSchema(DataSourceSchema):
     index_name: str = Field(description='Weaviate index name')
     content_property_name: str = Field(
-        description='Weaviate content property name')
+        description='Weaviate content property name',
+    )
     additional_properties: Optional[List[str]] = Field(
-        description='Weaviate additional properties', default=[])
+        description='Weaviate additional properties', default=[],
+    )
     connection: Optional[WeaviateConnection] = Field(
-        description='Weaviate connection string')
+        description='Weaviate connection string',
+    )
 
 
 class WeaviateConnectionConfiguration(Config):
@@ -70,17 +79,22 @@ class WeaviateDataSource(DataSourceProcessor[WeaviateDatabaseSchema]):
         self.datasource = datasource
         if self.datasource.config and 'data' in self.datasource.config:
             config_dict = WeaviateConnectionConfiguration().from_dict(
-                self.datasource.config, self.datasource.profile.decrypt_value)
+                self.datasource.config, self.datasource.profile.decrypt_value,
+            )
             self._configuration = WeaviateDatabaseSchema(
-                **config_dict['weaviate_config'])
-            self._weviate_client = Weaviate(**WeaviateConfiguration(
-                url=self._configuration.connection.weaviate_url,
-                username=self._configuration.connection.username,
-                password=self._configuration.connection.password,
-                api_key=self._configuration.connection.api_key,
-                additional_headers=json.loads(
-                    self._configuration.connection.additional_headers) if self._configuration.connection.additional_headers else {},
-            ).dict())
+                **config_dict['weaviate_config'],
+            )
+            self._weviate_client = Weaviate(
+                **WeaviateConfiguration(
+                    url=self._configuration.connection.weaviate_url,
+                    username=self._configuration.connection.username,
+                    password=self._configuration.connection.password,
+                    api_key=self._configuration.connection.api_key,
+                    additional_headers=json.loads(
+                        self._configuration.connection.additional_headers,
+                    ) if self._configuration.connection.additional_headers else {},
+                ).dict(),
+            )
 
     # This static method returns the name of the datasource class as 'Weaviate'.
     @staticmethod
@@ -136,11 +150,13 @@ class WeaviateDataSource(DataSourceProcessor[WeaviateDatabaseSchema]):
                 query=query,
                 page_content_key=self._configuration.content_property_name,
                 limit=kwargs.get('limit', 2),
-                metadata={'additional_properties': additional_properties,
-                          'metadata_properties': ['distance']},
+                metadata={
+                    'additional_properties': additional_properties,
+                    'metadata_properties': ['distance'],
+                },
                 search_filters=kwargs.get('search_filters', None),
             ),
-            **kwargs
+            **kwargs,
         )
         return result
 
@@ -154,11 +170,13 @@ class WeaviateDataSource(DataSourceProcessor[WeaviateDatabaseSchema]):
                 query=query,
                 page_content_key=self._configuration.content_property_name,
                 limit=kwargs.get('limit', 2),
-                metadata={'additional_properties': additional_properties,
-                          'metadata_properties': ['score']},
+                metadata={
+                    'additional_properties': additional_properties,
+                    'metadata_properties': ['score'],
+                },
                 search_filters=kwargs.get('search_filters', None),
             ),
-            **kwargs
+            **kwargs,
         )
         return result
 

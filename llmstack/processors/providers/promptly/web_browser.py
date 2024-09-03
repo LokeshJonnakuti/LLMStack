@@ -1,29 +1,34 @@
 import base64
 import logging
 from enum import Enum
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import grpc
 from asgiref.sync import async_to_sync
 from django.conf import settings
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
 
-from llmstack.common.runner.proto import runner_pb2, runner_pb2_grpc
-from llmstack.processors.providers.api_processor_interface import (
-    ApiProcessorInterface,
-    ApiProcessorSchema,
-)
+from llmstack.common.runner.proto import runner_pb2
+from llmstack.common.runner.proto import runner_pb2_grpc
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
 
 class WebBrowserConfiguration(ApiProcessorSchema):
     connection_id: Optional[str] = Field(
-        description='Connection to use', widget='connection', advanced_parameter=False)
+        description='Connection to use', widget='connection', advanced_parameter=False,
+    )
     stream_video: bool = Field(
-        description='Stream video of the browser', default=False)
+        description='Stream video of the browser', default=False,
+    )
     timeout: int = Field(
-        description='Timeout in seconds', default=10, ge=1, le=100)
+        description='Timeout in seconds', default=10, ge=1, le=100,
+    )
 
 
 class BrowserInstructionType(str, Enum):
@@ -49,15 +54,18 @@ class BrowserInstruction(BaseModel):
 
 class WebBrowserInput(ApiProcessorSchema):
     url: str = Field(
-        description='URL to visit')
+        description='URL to visit',
+    )
     instructions: List[BrowserInstruction] = Field(
-        ..., description='Instructions to execute')
+        ..., description='Instructions to execute',
+    )
 
 
 class WebBrowserOutput(ApiProcessorSchema):
     text: str = Field(default='', description='Text of the result')
     video: Optional[str] = Field(
-        default=None, description='Video of the result')
+        default=None, description='Video of the result',
+    )
 
 
 class WebBrowser(ApiProcessorInterface[WebBrowserInput, WebBrowserOutput, WebBrowserConfiguration]):
@@ -85,7 +93,8 @@ class WebBrowser(ApiProcessorInterface[WebBrowserInput, WebBrowserOutput, WebBro
         output_text = ''
 
         channel = grpc.insecure_channel(
-            f'{settings.RUNNER_HOST}:{settings.RUNNER_PORT}')
+            f'{settings.RUNNER_HOST}:{settings.RUNNER_PORT}',
+        )
         stub = runner_pb2_grpc.RunnerStub(channel)
 
         try:
@@ -93,43 +102,53 @@ class WebBrowser(ApiProcessorInterface[WebBrowserInput, WebBrowserOutput, WebBro
             for instruction in self._input.instructions:
                 if instruction.type == BrowserInstructionType.GOTO:
                     input = runner_pb2.BrowserInput(
-                        type=runner_pb2.GOTO, data=instruction.data)
+                        type=runner_pb2.GOTO, data=instruction.data,
+                    )
                 if instruction.type == BrowserInstructionType.CLICK:
                     input = runner_pb2.BrowserInput(
-                        type=runner_pb2.CLICK, selector=instruction.selector)
+                        type=runner_pb2.CLICK, selector=instruction.selector,
+                    )
                 elif instruction.type == BrowserInstructionType.WAIT:
                     input = runner_pb2.BrowserInput(
-                        type=runner_pb2.WAIT, selector=instruction.selector)
+                        type=runner_pb2.WAIT, selector=instruction.selector,
+                    )
                 elif instruction.type == BrowserInstructionType.COPY:
                     input = runner_pb2.BrowserInput(
-                        type=runner_pb2.COPY, selector=instruction.selector)
+                        type=runner_pb2.COPY, selector=instruction.selector,
+                    )
                 playwright_request.steps.append(input)
             playwright_request.url = self._input.url
             playwright_request.timeout = self._config.timeout if self._config.timeout and self._config.timeout > 0 and self._config.timeout <= 100 else 100
             playwright_request.session_data = self._env['connections'][self._config.connection_id][
-                'configuration']['_storage_state'] if self._config.connection_id else ''
+                'configuration'
+            ]['_storage_state'] if self._config.connection_id else ''
             playwright_request.stream_video = self._config.stream_video
 
             playwright_response_iter = stub.GetPlaywrightBrowser(
-                playwright_request)
+                playwright_request,
+            )
             for response in playwright_response_iter:
                 if response.state == runner_pb2.TERMINATED:
-                    output_text = "".join([x.text for x in response.outputs])
+                    output_text = ''.join([x.text for x in response.outputs])
                     break
 
                 if response.video:
                     # Send base64 encoded video
-                    async_to_sync(output_stream.write)(WebBrowserOutput(
-                        text='',
-                        video=f"data:videostream;name=browser;base64,{base64.b64encode(response.video).decode('utf-8')}"
-                    ))
+                    async_to_sync(output_stream.write)(
+                        WebBrowserOutput(
+                            text='',
+                            video=f"data:videostream;name=browser;base64,{base64.b64encode(response.video).decode('utf-8')}",
+                        ),
+                    )
 
         except Exception as e:
             logger.exception(e)
 
-        async_to_sync(output_stream.write)(WebBrowserOutput(
-            text=output_text
-        ))
+        async_to_sync(output_stream.write)(
+            WebBrowserOutput(
+                text=output_text,
+            ),
+        )
         output = output_stream.finalize()
 
         channel.close()
