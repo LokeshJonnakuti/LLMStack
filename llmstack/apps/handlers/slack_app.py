@@ -30,7 +30,7 @@ def get_slack_user_email(slack_user_id, slack_bot_token):
         'https://slack.com/api/users.info', params={
             'user': slack_user_id,
         }, headers={'Authorization': f'Bearer {slack_bot_token}'},
-    )
+    timeout=60)
     if http_request.status_code == 200:
         return http_request.json()['user']['profile']['email']
     else:

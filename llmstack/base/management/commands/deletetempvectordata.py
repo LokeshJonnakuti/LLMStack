@@ -50,7 +50,7 @@ class WeaviateSchema(BaseModel):
 
 def get_schema():
     url = f'{WEAVIATE_URL}/v1/schema'
-    return requests.get(url).json()
+    return requests.get(url, timeout=60).json()
 
 
 def get_objects(class_name, limit=1000, last_document_id=None):
@@ -58,7 +58,7 @@ def get_objects(class_name, limit=1000, last_document_id=None):
         url = f'{WEAVIATE_URL}/v1/objects/?class={class_name}&limit={limit}&after={last_document_id}&include=classification,vector'
     else:
         url = f'{WEAVIATE_URL}/v1/objects/?class={class_name}&limit={limit}&include=classification,vector'
-    result = requests.get(url).json()
+    result = requests.get(url, timeout=60).json()
     if len(result['objects']) > 0:
         last_document_id = result['objects'][-1]['id']
         result['objects'] += get_objects(class_name, limit, last_document_id)

@@ -93,7 +93,7 @@ class DiscordApp(AppTypeInterface[DiscordAppConfigSchema]):
                     f'https://discord.com/api/v10/applications/{config.get("app_id")}/commands/{config.get("slash_command_id")}', json=body, headers={
                         'Authorization': f'Bot {config.get("bot_token")}',
                     },
-                )
+                timeout=60)
                 if not response.ok:
                     logger.error(
                         f'Failed to update slash command, Error: {response.text}')
@@ -105,7 +105,7 @@ class DiscordApp(AppTypeInterface[DiscordAppConfigSchema]):
                     f'https://discord.com/api/v10/applications/{config.get("app_id")}/commands', json=body, headers={
                         'Authorization': f'Bot {config.get("bot_token")}',
                     },
-                )
+                timeout=60)
                 if not response.ok:
                     logger.error(
                         f'Failed to update slash command, Error: {response.text}')

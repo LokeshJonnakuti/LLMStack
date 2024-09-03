@@ -122,7 +122,7 @@ class TextToSpeechProcessor(ApiProcessorInterface[TextToSpeechInput, TextToSpeec
             'audioConfig': self._config.audio_config.dict(),
         }
 
-        response = requests.post(api_url, headers=headers, json=data)
+        response = requests.post(api_url, headers=headers, json=data, timeout=60)
         response.raise_for_status()
         response_data = response.json()
         audio_content = f"data:audio/mp3;base64,{response_data['audioContent']}"

@@ -237,7 +237,7 @@ def main():
         try:
             import requests
             requests.get(
-                f'http://localhost:{os.environ["LLMSTACK_PORT"]}')
+                f'http://localhost:{os.environ["LLMSTACK_PORT"]}', timeout=60)
             break
         except Exception:
             print(
