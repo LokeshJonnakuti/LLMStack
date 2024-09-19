@@ -13,9 +13,22 @@ from pydantic import conint
 from pydantic import Extra
 from pydantic import Field
 
-from llmstack.common.blocks.http import BearerTokenAuth, NoAuth, HttpAPIProcessor, HttpAPIProcessorInput, HttpAPIProcessorOutput, JsonBody, RawRequestBody
-from llmstack.common.blocks.base.processor import BaseConfiguration, BaseConfigurationType, Schema, BaseInput, BaseInputEnvironment, BaseInputType, BaseOutput, BaseOutputType
+from llmstack.common.blocks.base.processor import BaseConfiguration
+from llmstack.common.blocks.base.processor import BaseConfigurationType
+from llmstack.common.blocks.base.processor import BaseInput
+from llmstack.common.blocks.base.processor import BaseInputEnvironment
+from llmstack.common.blocks.base.processor import BaseInputType
+from llmstack.common.blocks.base.processor import BaseOutput
+from llmstack.common.blocks.base.processor import BaseOutputType
+from llmstack.common.blocks.base.processor import Schema
+from llmstack.common.blocks.http import BearerTokenAuth
 from llmstack.common.blocks.http import HttpAPIError as BaseError
+from llmstack.common.blocks.http import HttpAPIProcessor
+from llmstack.common.blocks.http import HttpAPIProcessorInput
+from llmstack.common.blocks.http import HttpAPIProcessorOutput
+from llmstack.common.blocks.http import JsonBody
+from llmstack.common.blocks.http import NoAuth
+from llmstack.common.blocks.http import RawRequestBody
 from llmstack.common.blocks.llm import LLMBaseProcessor
 
 logger = logging.getLogger(__name__)
@@ -95,12 +108,16 @@ class OpenAIAPIProcessor(LLMBaseProcessor[BaseInputType, BaseOutputType, BaseCon
             url=self._get_api_url(),
             method='POST',
             body=JsonBody(
-                json_body=(self._get_api_request_payload(
-                    input, configuration)),
+                json_body=(
+                    self._get_api_request_payload(
+                    input, configuration,
+                    )
+                ),
             ),
             headers={},
             authorization=BearerTokenAuth(
-                token=input.env.openai_api_key) if input.env.openai_api_key else NoAuth(),
+                token=input.env.openai_api_key,
+            ) if input.env.openai_api_key else NoAuth(),
         )
 
         http_status_is_ok = True
@@ -124,7 +141,8 @@ class OpenAIAPIProcessor(LLMBaseProcessor[BaseInputType, BaseOutputType, BaseCon
             raise Exception(
                 process_openai_error_response(
                     http_response.copy(
-                        update={'content_json': json.loads(error_message)}),
+                        update={'content_json': json.loads(error_message)},
+                    ),
                 ),
             )
 
@@ -137,12 +155,16 @@ class OpenAIAPIProcessor(LLMBaseProcessor[BaseInputType, BaseOutputType, BaseCon
             url=self._get_api_url(),
             method='POST',
             body=JsonBody(
-                json_body=(self._get_api_request_payload(
-                    input, configuration)),
+                json_body=(
+                    self._get_api_request_payload(
+                    input, configuration,
+                    )
+                ),
             ),
             headers={},
             authorization=BearerTokenAuth(
-                token=input.env.openai_api_key) if input.env.openai_api_key else NoAuth(),
+                token=input.env.openai_api_key,
+            ) if input.env.openai_api_key else NoAuth(),
         )
 
         http_response = http_api_processor.process(
@@ -349,18 +371,22 @@ class OpenAIChatCompletionsAPIProcessor(OpenAIAPIProcessor[OpenAIChatCompletions
 
         return OpenAIChatCompletionsAPIProcessorOutput(
             choices=choices, metadata=OpenAIAPIProcessorOutputMetadata(
-                raw_response=json_response),
+                raw_response=json_response,
+            ),
         )
 
     def _transform_api_response(self, input: OpenAIAPIProcessorInput, configuration: OpenAIAPIProcessorConfiguration, response: HttpAPIProcessorOutput) -> OpenAIChatCompletionsAPIProcessorOutput:
         choices = list(
-            map(lambda x: ChatMessage(**x['message']),
-                json.loads(response.text)['choices']),
+            map(
+                lambda x: ChatMessage(**x['message']),
+                json.loads(response.text)['choices'],
+            ),
         )
 
         return OpenAIChatCompletionsAPIProcessorOutput(
             choices=choices, metadata=OpenAIAPIProcessorOutputMetadata(
-                raw_response=json.loads(response.text)),
+                raw_response=json.loads(response.text),
+            ),
         )
 
 
@@ -385,7 +411,7 @@ class ResponseFormat(str, Enum):
 class ImageModel(str, Enum):
     DALL_E_3 = 'dall-e-3'
     DALL_E_2 = 'dall-e-2'
-    
+
     def __str__(self):
         return self.value
 class OpenAIFile(Schema):
@@ -463,7 +489,8 @@ class OpenAIImageEditsProcessor(OpenAIAPIProcessor[OpenAIImageEditsProcessorInpu
         )
         return OpenAIImageVariationsProcessorOutput(
             answer=answer, metadata=OpenAIAPIProcessorOutputMetadata(
-                raw_response=json.loads(response.text)),
+                raw_response=json.loads(response.text),
+            ),
         )
 
     def _process(self, input: OpenAIImageEditsProcessorInput, configuration: OpenAIImageEditsProcessorConfiguration) -> BaseOutputType:
@@ -559,7 +586,8 @@ class OpenAIImageVariationsProcessor(OpenAIAPIProcessor[OpenAIImageVariationsPro
         )
         return OpenAIImageVariationsProcessorOutput(
             answer=answer, metadata=OpenAIAPIProcessorOutputMetadata(
-                raw_response=json.loads(response.text)),
+                raw_response=json.loads(response.text),
+            ),
         )
 
     def _process(self, input: OpenAIImageVariationsProcessorInput, configuration: OpenAIImageVariationsProcessorConfiguration) -> BaseOutputType:

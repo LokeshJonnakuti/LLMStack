@@ -1,6 +1,7 @@
+import logging
+
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -34,4 +35,4 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def get_connect_redirect_url(self, request, socialaccount):
         logger.debug(f"get_connect_redirect_url: params: {request.GET}")
-        return request.GET.get("redirectUrl", "/")
+        return request.GET.get('redirectUrl', '/')

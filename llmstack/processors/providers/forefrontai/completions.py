@@ -6,7 +6,8 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, TEXT_WIDGET_NAME
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import TEXT_WIDGET_NAME
 
 
 logger = logging.getLogger(__name__)

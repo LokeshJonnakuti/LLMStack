@@ -13,14 +13,14 @@ class BasicHTTPAuthWithRedis():
         try:
             import redis
         except ImportError:
-            logger.error("Unable to load redis module")
+            logger.error('Unable to load redis module')
             sys.exit()
         # Default values
         self._port = 6379
         self._db = 0
         self._password = None
         try:
-            fields = src.split(":")
+            fields = src.split(':')
             if len(fields) == 1:
                 self._server = fields[0]
             elif len(fields) == 2:
@@ -45,12 +45,16 @@ class BasicHTTPAuthWithRedis():
                 raise ValueError
             self._port = int(self._port)
             self._db = int(self._db)
-            logger.info("BasicHTTPAuthWithRedis backend initilized (%s:%s)" %
-                        (self._server, self._port))
+            logger.info(
+                'BasicHTTPAuthWithRedis backend initilized (%s:%s)' %
+                (self._server, self._port),
+            )
         except ValueError:
-            logger.error("The provided --auth-source='%s' is not in the "
-                         "expected format <host>[:<port>[:<db>[:<password>]]]" %
-                         src)
+            logger.error(
+                "The provided --auth-source='%s' is not in the "
+                'expected format <host>[:<port>[:<db>[:<password>]]]' %
+                src,
+            )
             sys.exit()
 
     def authenticate(self, headers, target_host, target_port):
@@ -86,14 +90,17 @@ class BasicHTTPAuthWithRedis():
             import redis
         except ImportError:
             logger.error(
-                "package redis not found, are you sure you've installed them correctly?")
+                "package redis not found, are you sure you've installed them correctly?",
+            )
             sys.exit()
 
-        client = redis.Redis(host=self._server, port=self._port,
-                             db=self._db, password=self._password)
+        client = redis.Redis(
+            host=self._server, port=self._port,
+            db=self._db, password=self._password,
+        )
         stuff = client.get(username)
 
-        if stuff and stuff.decode("utf-8").strip() == password:
+        if stuff and stuff.decode('utf-8').strip() == password:
             return True
         else:
             return False
@@ -102,5 +109,7 @@ class BasicHTTPAuthWithRedis():
         raise AuthenticationError(response_code=403)
 
     def demand_auth(self):
-        raise AuthenticationError(response_code=401,
-                                  response_headers={'WWW-Authenticate': 'Basic realm="Websockify"'})
+        raise AuthenticationError(
+            response_code=401,
+            response_headers={'WWW-Authenticate': 'Basic realm="Websockify"'},
+        )

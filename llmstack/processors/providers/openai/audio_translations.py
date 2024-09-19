@@ -1,13 +1,14 @@
 import base64
 import logging
-import openai
 from typing import Optional
 
+import openai
 from asgiref.sync import async_to_sync
 from pydantic import Field
 
 from llmstack.common.utils.utils import validate_parse_data_uri
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 
 logger = logging.getLogger(__name__)
@@ -83,15 +84,15 @@ class AudioTranslations(ApiProcessorInterface[AudioTranslationsInput, AudioTrans
 
         file_data = base64.b64decode(base64_encoded_data)
         client = openai.OpenAI(api_key=self._env['openai_api_key'])
-        
+
         translation = client.audio.translations.create(
             file=(file_name, file_data),
             model=self._config.model,
             prompt=self._input.prompt,
             response_format=self._config.response_format,
-            temperature=self._config.temperature
+            temperature=self._config.temperature,
         )
-        
+
         async_to_sync(self._output_stream.write)(
             AudioTranslationsOutput(text=translation.text),
         )

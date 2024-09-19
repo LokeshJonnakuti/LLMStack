@@ -6,6 +6,7 @@ from typing import List
 from typing import Optional
 
 import requests
+from security import safe_requests
 from striprtf.striprtf import rtf_to_text
 from unstructured.documents.elements import Element
 from unstructured.documents.elements import ElementMetadata
@@ -20,9 +21,10 @@ from unstructured.partition.pdf import partition_pdf
 from unstructured.partition.pptx import partition_pptx
 from unstructured.partition.text import partition_text
 
-from llmstack.common.utils.audio_loader import partition_audio, partition_video, partition_youtube_audio
+from llmstack.common.utils.audio_loader import partition_audio
+from llmstack.common.utils.audio_loader import partition_video
+from llmstack.common.utils.audio_loader import partition_youtube_audio
 from llmstack.common.utils.crawlers import run_url_spider_in_process
-from security import safe_requests
 
 logger = logging.getLogger(__name__)
 headers = {
@@ -69,8 +71,12 @@ def extract_text_elements(mime_type, data, file_name, charset='utf-8', extra_par
     elif mime_type == 'text/plain':
         elements = partition_text(text=data.decode(charset))
     elif mime_type == 'application/json':
-        elements = [Text(text=data.decode(charset),
-                         metadata=ElementMetadata(filename=file_name))]
+        elements = [
+            Text(
+                text=data.decode(charset),
+                metadata=ElementMetadata(filename=file_name),
+            ),
+        ]
     elif mime_type == 'text/csv' or mime_type == 'application/csv':
         elements = [
             Text(

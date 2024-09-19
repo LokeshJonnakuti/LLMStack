@@ -1,8 +1,10 @@
 import base64
-from hashlib import sha1, sha256
 import hmac
 import logging
-from urllib.parse import parse_qs, urlparse
+from hashlib import sha1
+from hashlib import sha256
+from urllib.parse import parse_qs
+from urllib.parse import urlparse
 
 from rest_framework.exceptions import PermissionDenied
 
@@ -36,7 +38,7 @@ def remove_port(uri):
     if not uri.port:
         return uri.geturl()
 
-    new_netloc = uri.netloc.split(":")[0]
+    new_netloc = uri.netloc.split(':')[0]
     new_uri = uri._replace(netloc=new_netloc)
 
     return new_uri.geturl()
@@ -53,8 +55,8 @@ def add_port(uri):
     if uri.port:
         return uri.geturl()
 
-    port = 443 if uri.scheme == "https" else 80
-    new_netloc = uri.netloc + ":" + str(port)
+    port = 443 if uri.scheme == 'https' else 80
+    new_netloc = uri.netloc + ':' + str(port)
     new_uri = uri._replace(netloc=new_netloc)
 
     return new_uri.geturl()
@@ -62,7 +64,7 @@ def add_port(uri):
 
 class RequestValidator(object):
     def __init__(self, token):
-        self.token = token.encode("utf-8")
+        self.token = token.encode('utf-8')
 
     def compute_signature(self, uri, params):
         """Compute the signature for a given request
@@ -81,9 +83,9 @@ class RequestValidator(object):
                     s += param_name + value
 
         # compute signature and compare signatures
-        mac = hmac.new(self.token, s.encode("utf-8"), sha1)
+        mac = hmac.new(self.token, s.encode('utf-8'), sha1)
         computed = base64.b64encode(mac.digest())
-        computed = computed.decode("utf-8")
+        computed = computed.decode('utf-8')
 
         return computed.strip()
 
@@ -100,7 +102,7 @@ class RequestValidator(object):
                 return [param_dict[param_name]]
 
     def compute_hash(self, body):
-        computed = sha256(body.encode("utf-8")).hexdigest()
+        computed = sha256(body.encode('utf-8')).hexdigest()
 
         return computed.strip()
 
@@ -123,17 +125,17 @@ class RequestValidator(object):
         valid_body_hash = True  # May not receive body hash, so default succeed
 
         query = parse_qs(parsed_uri.query)
-        if "bodySHA256" in query and isinstance(params, str):
-            valid_body_hash = compare(self.compute_hash(params), query["bodySHA256"][0])
+        if 'bodySHA256' in query and isinstance(params, str):
+            valid_body_hash = compare(self.compute_hash(params), query['bodySHA256'][0])
             params = {}
 
         #  check signature of uri with and without port,
         #  since sig generation on back end is inconsistent
         valid_signature = compare(
-            self.compute_signature(uri_without_port, params), signature
+            self.compute_signature(uri_without_port, params), signature,
         )
         valid_signature_with_port = compare(
-            self.compute_signature(uri_with_port, params), signature
+            self.compute_signature(uri_with_port, params), signature,
         )
 
         return valid_body_hash and (valid_signature or valid_signature_with_port)

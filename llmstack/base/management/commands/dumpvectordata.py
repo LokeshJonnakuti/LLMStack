@@ -4,12 +4,12 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+
 import weaviate
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from pydantic import BaseModel
 from pydantic import Field
-
-from django.conf import settings
 from security import safe_requests
 
 WEAVIATE_URL = settings.WEAVIATE_URL

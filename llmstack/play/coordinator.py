@@ -1,10 +1,13 @@
 import logging
 from typing import List
 
-from pykka import ActorDeadError, ThreadingActor
+from pykka import ActorDeadError
+from pykka import ThreadingActor
 
 from llmstack.play.actor import ActorConfig
-from llmstack.play.output_stream import Message, MessageType, OutputStream
+from llmstack.play.output_stream import Message
+from llmstack.play.output_stream import MessageType
+from llmstack.play.output_stream import OutputStream
 from llmstack.play.utils import ResettableTimer
 
 logger = logging.getLogger(__name__)
@@ -35,13 +38,16 @@ class Coordinator(ThreadingActor):
         self._output_streams = []
 
         all_dependencies = [
-            actor_config.template_key for actor_config in actor_configs]
+            actor_config.template_key for actor_config in actor_configs
+        ]
         # Spawn actors
         self.actors = {}
         for actor_config in actor_configs:
             self._output_streams.append(
-                OutputStream(stream_id=actor_config.name,
-                             coordinator_urn=self.actor_urn, output_cls=actor_config.output_cls),
+                OutputStream(
+                    stream_id=actor_config.name,
+                    coordinator_urn=self.actor_urn, output_cls=actor_config.output_cls,
+                ),
             )
             actor = actor_config.actor.start(
                 output_stream=self._output_streams[-1], dependencies=actor_config.dependencies, all_dependencies=all_dependencies, **actor_config.kwargs,
@@ -86,9 +92,11 @@ class Coordinator(ThreadingActor):
         for actor in self._actor_dependencies:
             if not self._actor_dependencies[actor] and actor not in ['input', 'output', 'bookkeeping']:
                 logger.info(
-                    f'Actor {actor} has no dependencies. Sending BEGIN message')
+                    f'Actor {actor} has no dependencies. Sending BEGIN message',
+                )
                 self.actors[actor].tell(
-                    Message(message_type=MessageType.BEGIN))
+                    Message(message_type=MessageType.BEGIN),
+                )
 
     def relay(self, message: Message):
         self._idle_timer.reset()
@@ -109,7 +117,8 @@ class Coordinator(ThreadingActor):
         # If it is a targetted message, send it to the targetted actor
         if message.message_to and message.message_to in self.actors:
             logger.info(
-                f'Sending message {message} to {message.message_to} from {message.message_from}')
+                f'Sending message {message} to {message.message_to} from {message.message_from}',
+            )
             self.actors[message.message_to].tell(message)
             return
 
@@ -129,12 +138,19 @@ class Coordinator(ThreadingActor):
             if len(self._stream_errors.keys()) > 0:
                 # We timed out because some actor in the chain errored out
                 errors = list(
-                    map(lambda x: self._stream_errors[x], self._stream_errors))
+                    map(lambda x: self._stream_errors[x], self._stream_errors),
+                )
                 output_actor_ref.tell(
-                    Message(message_type=MessageType.STREAM_ERROR, message={'errors': errors}))
+                    Message(message_type=MessageType.STREAM_ERROR, message={'errors': errors}),
+                )
             else:
-                output_actor_ref.tell(Message(message_type=MessageType.STREAM_ERROR, message={
-                                      'errors': ['Timed out waiting for response']}))
+                output_actor_ref.tell(
+                    Message(
+                        message_type=MessageType.STREAM_ERROR, message={
+                        'errors': ['Timed out waiting for response'],
+                        },
+                    ),
+                )
             ResettableTimer(10, self.force_stop).start()
 
     def on_stop(self) -> None:

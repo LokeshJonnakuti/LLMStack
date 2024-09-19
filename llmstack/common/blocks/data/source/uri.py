@@ -1,16 +1,22 @@
-import logging
 import base64
+import logging
 import re
 from typing import Dict
+
 from pydantic import root_validator
+from security import safe_requests
 
 from llmstack.common.blocks.base.processor import ProcessorInterface
-from llmstack.common.blocks.data.source import DataSourceInputSchema, DataSourceConfigurationSchema, DataSourceOutputSchema
-from llmstack.common.utils.text_extract import is_youtube_video_url, get_url_content_type, run_url_spider_in_process
-from llmstack.common.blocks.data.text_extractor.local import LocalTextExtractorProcessor
-from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorProcessor, WhisperTextExtractorInput
+from llmstack.common.blocks.data.source import DataSourceConfigurationSchema
+from llmstack.common.blocks.data.source import DataSourceInputSchema
+from llmstack.common.blocks.data.source import DataSourceOutputSchema
 from llmstack.common.blocks.data.text_extractor import TextExtractorInput
-from security import safe_requests
+from llmstack.common.blocks.data.text_extractor.local import LocalTextExtractorProcessor
+from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorInput
+from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorProcessor
+from llmstack.common.utils.text_extract import get_url_content_type
+from llmstack.common.utils.text_extract import is_youtube_video_url
+from llmstack.common.utils.text_extract import run_url_spider_in_process
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +37,15 @@ class UriInput(DataSourceInputSchema):
     @root_validator()
     @classmethod
     def validate_url(cls, field_values) -> str:
-        value = field_values.get("uri")
+        value = field_values.get('uri')
         # Ensure that the URL is valid and that it is an HTTP URL or Data URL
-        if not value.startswith("http://") and not value.startswith("https://") and not value.startswith("data:"):
-            raise ValueError("URL must be an HTTP URL or Data URL")
+        if not value.startswith('http://') and not value.startswith('https://') and not value.startswith('data:'):
+            raise ValueError('URL must be an HTTP URL or Data URL')
 
-        if value.startswith("data:"):
+        if value.startswith('data:'):
             mime_type, file_name, data = validate_parse_data_uri(value)
             if mime_type is None or file_name is None or data is None:
-                raise ValueError("Data URI must be valid")
+                raise ValueError('Data URI must be valid')
 
         return field_values
 
@@ -81,36 +87,43 @@ class UriConfiguration(DataSourceConfigurationSchema):
 class Uri(ProcessorInterface[UriInput, DataSourceOutputSchema, UriConfiguration]):
     def _extract_text(self, data: bytes, mime_type: str, file_name: str, configuration: UriConfiguration) -> DataSourceOutputSchema:
         if configuration.text_extractor.get(mime_type) == 'local':
-            result = LocalTextExtractorProcessor().process(TextExtractorInput(
-                data=data,
-                mime_type=mime_type,
-                id=file_name),
-                configuration=None
+            result = LocalTextExtractorProcessor().process(
+                TextExtractorInput(
+                    data=data,
+                    mime_type=mime_type,
+                    id=file_name,
+                ),
+                    configuration=None,
             )
             return DataSourceOutputSchema(
-                documents=result.documents)
+                documents=result.documents,
+            )
         elif configuration.text_extractor.get(mime_type) == 'whisper':
-            result = WhisperTextExtractorProcessor().process(WhisperTextExtractorInput(
-                data=data,
-                mime_type=mime_type,
-                id=file_name),
-                configuration=None
+            result = WhisperTextExtractorProcessor().process(
+                WhisperTextExtractorInput(
+                    data=data,
+                    mime_type=mime_type,
+                    id=file_name,
+                ),
+                    configuration=None,
             )
             return DataSourceOutputSchema(
-                documents=result.documents)
+                documents=result.documents,
+            )
         else:
-            raise Exception("Invalid mime type")
+            raise Exception('Invalid mime type')
 
     def process_data_url(self, input: UriInput, configuration: UriConfiguration) -> DataSourceOutputSchema:
         mime_type, file_name, base64_encoded_data = validate_parse_data_uri(
-            input.uri)
+            input.uri,
+        )
         decoded_data = base64.b64decode(base64_encoded_data)
         return self._extract_text(decoded_data, mime_type, file_name, configuration)
 
     def process_http_url(self, input: UriInput, configuration: UriConfiguration) -> DataSourceOutputSchema:
         data = None
         if is_youtube_video_url(input.uri):
-            raise Exception("Youtube video URLs are not supported")
+            raise Exception('Youtube video URLs are not supported')
 
         url_content_type = get_url_content_type(url=input.uri)
         url_content_type_parts = url_content_type.split(';')
@@ -127,22 +140,26 @@ class Uri(ProcessorInterface[UriInput, DataSourceOutputSchema, UriConfiguration]
             # If this is an html page and we are configured to use scrapy
             if configuration.use_scrapy:
                 result = run_url_spider_in_process(
-                    url=input.uri, use_renderer=True)
+                    url=input.uri, use_renderer=True,
+                )
                 data = result[0]['html_page'].encode('utf-8')
             else:
-                data = safe_requests.get(url=input.uri, headers=configuration.headers,
-                                    timeout=configuration.default_timeout,
-                                    ).content
+                data = safe_requests.get(
+                    url=input.uri, headers=configuration.headers,
+                    timeout=configuration.default_timeout,
+                ).content
         else:
-            data = safe_requests.get(url=input.uri, headers=configuration.headers,
-                                timeout=configuration.default_timeout).content
+            data = safe_requests.get(
+                url=input.uri, headers=configuration.headers,
+                timeout=configuration.default_timeout,
+            ).content
 
         return self._extract_text(data, mime_type, input.uri, configuration)
 
     def process(self, input: UriInput, configuration: UriConfiguration) -> DataSourceOutputSchema:
-        if input.uri.startswith("data:"):
+        if input.uri.startswith('data:'):
             return self.process_data_url(input, configuration)
-        elif input.uri.startswith("http://") or input.uri.startswith("https://"):
+        elif input.uri.startswith('http://') or input.uri.startswith('https://'):
             return self.process_http_url(input, configuration)
         else:
-            raise Exception("Invalid URI")
+            raise Exception('Invalid URI')

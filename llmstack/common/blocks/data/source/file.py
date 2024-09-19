@@ -1,11 +1,16 @@
 import re
+
 import magic
 from pydantic import root_validator
+
 from llmstack.common.blocks.base.processor import ProcessorInterface
-from llmstack.common.blocks.data.source import DataSourceInputSchema, DataSourceConfigurationSchema, DataSourceOutputSchema
-from llmstack.common.blocks.data.text_extractor.local import LocalTextExtractorProcessor
-from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorProcessor, WhisperTextExtractorInput
+from llmstack.common.blocks.data.source import DataSourceConfigurationSchema
+from llmstack.common.blocks.data.source import DataSourceInputSchema
+from llmstack.common.blocks.data.source import DataSourceOutputSchema
 from llmstack.common.blocks.data.text_extractor import TextExtractorInput
+from llmstack.common.blocks.data.text_extractor.local import LocalTextExtractorProcessor
+from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorInput
+from llmstack.common.blocks.data.text_extractor.whisper import WhisperTextExtractorProcessor
 
 
 class FileInput(DataSourceInputSchema):
@@ -14,10 +19,10 @@ class FileInput(DataSourceInputSchema):
     @classmethod
     @root_validator()
     def validate_file(cls, field_values) -> str:
-        value = field_values.get("file")
+        value = field_values.get('file')
         # TODO: Validate that file is a valid file path and the file exists
-        if not re.match(r"^[a-zA-Z0-9_\-\.\/]+$", value):
-            raise ValueError("File must be a valid string")
+        if not re.match(r'^[a-zA-Z0-9_\-\.\/]+$', value):
+            raise ValueError('File must be a valid string')
         return value
 
 
@@ -52,29 +57,35 @@ class FileConfiguration(DataSourceConfigurationSchema):
 class File(ProcessorInterface[FileInput, DataSourceOutputSchema, FileConfiguration]):
     def _extract_text(self, data: bytes, mime_type: str, file_name: str, configuration: FileConfiguration) -> DataSourceOutputSchema:
         if configuration.text_extractor.get(mime_type) == 'local':
-            result = LocalTextExtractorProcessor().process(TextExtractorInput(
-                data=data,
-                mime_type=mime_type,
-                id=file_name),
-                configuration=None
+            result = LocalTextExtractorProcessor().process(
+                TextExtractorInput(
+                    data=data,
+                    mime_type=mime_type,
+                    id=file_name,
+                ),
+                    configuration=None,
             )
             return DataSourceOutputSchema(
-                documents=result.documents)
+                documents=result.documents,
+            )
         elif configuration.text_extractor.get(mime_type) == 'whisper':
-            result = WhisperTextExtractorProcessor().process(WhisperTextExtractorInput(
-                data=data,
-                mime_type=mime_type,
-                id=file_name),
-                configuration=None
+            result = WhisperTextExtractorProcessor().process(
+                WhisperTextExtractorInput(
+                    data=data,
+                    mime_type=mime_type,
+                    id=file_name,
+                ),
+                    configuration=None,
             )
             return DataSourceOutputSchema(
-                documents=result.documents)
+                documents=result.documents,
+            )
         else:
-            raise Exception("Invalid mime type")
+            raise Exception('Invalid mime type')
 
     def process(self, input: FileInput, configuration: FileConfiguration) -> DataSourceOutputSchema:
 
-        with open(input.file, "r") as file_p:
+        with open(input.file, 'r') as file_p:
             file_data = file_p.read()
             # Get the file mime type
             mime_type = magic.from_buffer(file_data, mime=True)
