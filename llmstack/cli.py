@@ -7,6 +7,7 @@ from collections import defaultdict
 
 import docker
 import toml
+from security import safe_requests
 
 
 def run_django_command(command: list[str] = ['manage.py', 'runserver']):
@@ -235,8 +236,7 @@ def main():
 
     while True:
         try:
-            import requests
-            requests.get(
+            safe_requests.get(
                 f'http://localhost:{os.environ["LLMSTACK_PORT"]}')
             break
         except Exception:

@@ -1,10 +1,10 @@
 import logging
 from typing import List, Optional 
-import requests
 from llmstack.connections.handlers import Oauth2BaseConfiguration
 from llmstack.connections.types import ConnectionTypeInterface
 from allauth.socialaccount.providers.hubspot.views import HubspotOAuth2Adapter
 from llmstack.connections.models import ConnectionType
+from security import safe_requests
 
 logger = logging.getLogger(__name__)
 class HubspotAdapter(HubspotOAuth2Adapter):
@@ -22,7 +22,7 @@ class HubspotAdapter(HubspotOAuth2Adapter):
     
     def complete_login(self, request, app, token, **kwargs):
         headers = {"Content-Type": "application/json"}
-        response = requests.get(
+        response = safe_requests.get(
             "{0}/{1}".format(self.profile_url, token.token), headers=headers
         )
         response.raise_for_status()

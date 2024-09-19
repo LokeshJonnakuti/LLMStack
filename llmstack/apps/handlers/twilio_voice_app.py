@@ -2,8 +2,6 @@ import base64
 import uuid
 import logging
 
-import requests
-
 from llmstack.apps.handlers.app_runnner import AppRunner
 from llmstack.apps.models import AppVisibility
 from llmstack.common.utils.audio_loader import partition_audio
@@ -14,6 +12,7 @@ from llmstack.play.actors.input import InputActor
 from llmstack.play.actors.output import OutputActor
 from llmstack.play.utils import convert_template_vars_from_legacy_format
 from llmstack.processors.providers.twilio.create_message import TwilioCreateMessageProcessor
+from security import safe_requests
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +78,7 @@ class TwilioVoiceAppRunner(AppRunner):
         if not recording_url.endswith('.mp3'):
             recording_url = recording_url + '.mp3'
             recording_filename = recording_url.split('/')[-1]
-        response = requests.get(recording_url, auth=(self.twilio_account_sid, self.twilio_auth_token))
+        response = safe_requests.get(recording_url, auth=(self.twilio_account_sid, self.twilio_auth_token))
         if response.status_code == 200:
             mp3_content = response.content
             # Encode the MP3 content as a base64 data URI

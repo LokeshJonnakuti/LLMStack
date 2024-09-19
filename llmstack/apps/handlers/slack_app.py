@@ -2,8 +2,6 @@ import logging
 import re
 import uuid
 
-import requests
-
 from llmstack.apps.handlers.app_runnner import AppRunner
 from llmstack.play.actor import ActorConfig
 from llmstack.play.actors.bookkeeping import BookKeepingActor
@@ -13,6 +11,7 @@ from llmstack.play.utils import convert_template_vars_from_legacy_format
 from llmstack.processors.providers.slack.post_message import SlackPostMessageProcessor
 
 from django.contrib.auth.models import User, AnonymousUser
+from security import safe_requests
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ def process_slack_message_text(text):
 
 
 def get_slack_user_email(slack_user_id, slack_bot_token):
-    http_request = requests.get(
+    http_request = safe_requests.get(
         'https://slack.com/api/users.info', params={
             'user': slack_user_id,
         }, headers={'Authorization': f'Bearer {slack_bot_token}'},
