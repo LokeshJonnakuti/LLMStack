@@ -1,6 +1,5 @@
 import json
 import logging
-import random
 from enum import Enum
 from typing import Any
 from typing import Dict
@@ -17,6 +16,7 @@ from stability_sdk import client
 from llmstack.common.utils.utils import get_key_or_raise
 from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema, IMAGE_WIDGET_NAME
 from llmstack.processors.providers.stabilityai.utils import get_guidance_preset_enum, get_sampler_grpc_enum, GuidancePreset, Sampler
+import secrets
 
 
 logger = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ class TextToImage(ApiProcessorInterface[TextToImageInput, TextToImageOutput, Tex
                 )
 
         if self._config.seed == 0:
-            self._config.seed = random.randint(0, 2147483646)
+            self._config.seed = secrets.SystemRandom().randint(0, 2147483646)
 
         stability_api = client.StabilityInference(
             key=stability_api_key,

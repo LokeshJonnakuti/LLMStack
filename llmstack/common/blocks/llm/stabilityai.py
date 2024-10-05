@@ -1,6 +1,5 @@
 import json
 import logging
-import random
 from enum import Enum
 from typing import List
 from typing import Optional
@@ -16,6 +15,7 @@ from stability_sdk import client
 
 from llmstack.common.blocks.base.processor import BaseConfiguration, BaseInput, BaseInputEnvironment, BaseOutputType, Schema
 from llmstack.common.blocks.llm import LLMBaseProcessor
+import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -237,8 +237,7 @@ class StabilityAIText2ImageGrpcProcessor(LLMBaseProcessor[StabilityAIText2ImageG
                     ),
                 )
 
-        seed = random.randint(
-            0, 2147483646,
+        seed = secrets.SystemRandom().randint(0, 2147483646,
         ) if configuration.seed == 0 else configuration.seed
 
         api_response = invoke_grpc_rpc(
