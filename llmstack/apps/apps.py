@@ -1,10 +1,10 @@
 import logging
 
-from django.apps import AppConfig
 from asgiref.sync import sync_to_async
+from django.apps import AppConfig
 
-from llmstack.apps.types.app_type_interface import AppTypeInterface
 from llmstack.apps.types.agent import Agent
+from llmstack.apps.types.app_type_interface import AppTypeInterface
 from llmstack.apps.types.chat import ChatApp
 from llmstack.apps.types.web import WebApp
 
@@ -22,7 +22,8 @@ def add_missing_app_types():
             })
         except Exception as e:
             logger.error(
-                f"Error while loading app type: {subclass.slug()}")
+                f"Error while loading app type: {subclass.slug()}",
+            )
             pass
 
     # If app slug is already present, do not add it again

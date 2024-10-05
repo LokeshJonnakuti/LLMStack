@@ -50,7 +50,8 @@ class CacheManager(ABC):
 BaseInputType = TypeVar('BaseInputType', BaseInput, dict)
 BaseOutputType = TypeVar('BaseOutputType', BaseOutput, dict)
 BaseConfigurationType = TypeVar(
-    'BaseConfigurationType', BaseConfiguration, dict)
+    'BaseConfigurationType', BaseConfiguration, dict,
+)
 
 
 class ProcessorInterface(Generic[BaseInputType, BaseOutputType, BaseConfigurationType], ABC):

@@ -11,7 +11,7 @@ import toml
 
 def run_django_command(command: list[str] = ['manage.py', 'runserver']):
     """Run a Django command"""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "llmstack.server.settings")
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'llmstack.server.settings')
     from django.core.management import execute_from_command_line
     execute_from_command_line(command)
 
@@ -28,13 +28,17 @@ def prepare_env():
     if not os.path.exists('.llmstack/config') and not os.path.exists(os.path.join(os.path.expanduser('~'), '.llmstack/config')):
         # Copy config.toml file from installed package to ~/.llmstack/config
         import shutil
-        shutil.copyfile(os.path.join(os.path.dirname(__file__), 'config.toml'), os.path.join(
-            os.path.expanduser('~'), '.llmstack', 'config'))
+        shutil.copyfile(
+            os.path.join(os.path.dirname(__file__), 'config.toml'), os.path.join(
+            os.path.expanduser('~'), '.llmstack', 'config',
+            ),
+        )
 
         # Given this is the first time the user is running llmstack, we should
         # ask the user for secret key, cipher_key_salt, database_password and save it in the config file
         config_path = os.path.join(
-            os.path.expanduser('~'), '.llmstack', 'config')
+            os.path.expanduser('~'), '.llmstack', 'config',
+        )
         config = {}
         with open(config_path) as f:
             config = toml.load(f)
@@ -43,16 +47,21 @@ def prepare_env():
             config['llmstack']['database_password'] = secrets.token_urlsafe(32)
             # Ask the user for admin username, email and password
             sys.stdout.write(
-                'It looks like you are running LLMStack for the first time. Please provide the following information:\n\n')
+                'It looks like you are running LLMStack for the first time. Please provide the following information:\n\n',
+            )
 
             config['llmstack']['admin_username'] = input(
-                'Enter admin username: (default: admin) ') or 'admin'
+                'Enter admin username: (default: admin) ',
+            ) or 'admin'
             config['llmstack']['admin_email'] = input(
-                'Enter admin email: ') or ''
+                'Enter admin email: ',
+            ) or ''
             config['llmstack']['admin_password'] = input(
-                'Enter admin password: (default: promptly) ') or 'promptly'
+                'Enter admin password: (default: promptly) ',
+            ) or 'promptly'
             config['llmstack']['default_openai_api_key'] = input(
-                'Enter default OpenAI API key: (Leave empty to configure in settings later) ') or ''
+                'Enter default OpenAI API key: (Leave empty to configure in settings later) ',
+            ) or ''
 
         with open(config_path, 'w') as f:
             toml.dump(config, f)
@@ -66,7 +75,8 @@ def prepare_env():
     # Throw error if config file doesn't exist
     if not os.path.exists('config'):
         sys.exit(
-            'ERROR: config file not found. Please create one in ~/.llmstack/config')
+            'ERROR: config file not found. Please create one in ~/.llmstack/config',
+        )
 
     # Updates to config.toml
     config_path = os.path.join('config')
@@ -104,7 +114,8 @@ def start_runner(environment):
     client = docker.from_env()
     runner_container = None
     image_name = environment.get(
-        'RUNNER_IMAGE_NAME', 'ghcr.io/trypromptly/llmstack-runner')
+        'RUNNER_IMAGE_NAME', 'ghcr.io/trypromptly/llmstack-runner',
+    )
     image_tag = environment.get('RUNNER_IMAGE_TAG', 'main')
 
     # Pull image if it is not locally available
@@ -113,7 +124,8 @@ def start_runner(environment):
 
         layers_status = defaultdict(dict)
         response = client.api.pull(
-            image_name, tag=image_tag, stream=True, decode=True)
+            image_name, tag=image_tag, stream=True, decode=True,
+        )
         for line in response:
             if 'id' in line:
                 layer_id = line['id']
@@ -123,7 +135,8 @@ def start_runner(environment):
                 # Print the current status of all layers
                 for layer, status in layers_status.items():
                     print(
-                        f"[llmstack-runner] Layer {layer}: {status.get('status', '')} {status.get('progress', '')}")
+                        f"[llmstack-runner] Layer {layer}: {status.get('status', '')} {status.get('progress', '')}",
+                    )
                 print()  # Add a blank line for better readability
 
             elif 'status' in line and 'id' not in line:
@@ -137,10 +150,13 @@ def start_runner(environment):
     try:
         runner_container = client.containers.get('llmstack-runner')
     except docker.errors.NotFound:
-        runner_container = client.containers.run(f'{image_name}:{image_tag}', name='llmstack-runner',
-                                                 ports={
-                                                     '50051/tcp': os.environ['RUNNER_PORT'], '50052/tcp': os.environ['RUNNER_WSS_PORT'], '50053/tcp': os.environ['RUNNER_PLAYWRIGHT_PORT']},
-                                                 detach=True, remove=True, environment=environment,)
+        runner_container = client.containers.run(
+            f'{image_name}:{image_tag}', name='llmstack-runner',
+            ports={
+                '50051/tcp': os.environ['RUNNER_PORT'], '50052/tcp': os.environ['RUNNER_WSS_PORT'], '50053/tcp': os.environ['RUNNER_PLAYWRIGHT_PORT'],
+            },
+            detach=True, remove=True, environment=environment,
+        )
 
     # Start runner container if not already running
     print('[llmstack-runner] Started LLMStack Runner')
@@ -149,7 +165,7 @@ def start_runner(environment):
 
     # Stream logs starting from the end to stdout
     for line in runner_container.logs(stream=True, follow=True):
-        print(f'[llmstack-runner] {line.decode("utf-8").strip()}')
+        print(f'[llmstack-runner] {line.decode('utf-8').strip()}')
 
 
 def stop_runner():
@@ -193,18 +209,23 @@ def main():
             llmstack_environment[key.upper()] = str(config['llmstack'][key])
         for key in config['llmstack-runner']:
             os.environ[f'RUNNER_{key.upper()}'] = str(
-                config['llmstack-runner'][key])
+                config['llmstack-runner'][key],
+            )
             runner_environment[f'RUNNER_{key.upper()}'] = str(
-                config['llmstack-runner'][key])
+                config['llmstack-runner'][key],
+            )
 
     if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
         print('Starting LLMStack')
-        run_server_command = ['manage.py',
-                              'runserver', os.environ['LLMSTACK_PORT']]
+        run_server_command = [
+            'manage.py',
+            'runserver', os.environ['LLMSTACK_PORT'],
+        ]
         if 'windows' in platform.platform().lower():
             run_server_command.append('--noreload')
         run_django_command(
-            run_server_command)
+            run_server_command,
+        )
         sys.exit(0)
 
     if len(sys.argv) > 1 and sys.argv[1] == 'manage.py':
@@ -212,8 +233,11 @@ def main():
         sys.exit(0)
 
     run_django_command(['manage.py', 'migrate', '--noinput'])
-    run_django_command(['manage.py', 'loaddata', os.path.join(
-        os.path.dirname(__file__), 'fixtures/initial_data.json')])
+    run_django_command([
+        'manage.py', 'loaddata', os.path.join(
+        os.path.dirname(__file__), 'fixtures/initial_data.json',
+        ),
+    ])
     run_django_command(['manage.py', 'createcachetable'])
     run_django_command(['manage.py', 'clearcache'])
 
@@ -223,7 +247,8 @@ def main():
     # Start llmstack-runner container in a separate thread
     import threading
     runner_thread = threading.Thread(
-        target=start_runner, args=([runner_environment]))
+        target=start_runner, args=([runner_environment]),
+    )
     runner_thread.start()
 
     # Run llmstack runserver in a separate process
@@ -237,14 +262,16 @@ def main():
         try:
             import requests
             requests.get(
-                f'http://localhost:{os.environ["LLMSTACK_PORT"]}')
+                f'http://localhost:{os.environ['LLMSTACK_PORT']}',
+            )
             break
         except Exception:
             print(
-                f'Waiting for LLMStack server to be up...')
+                f'Waiting for LLMStack server to be up...',
+            )
             time.sleep(1)
 
-    webbrowser.open(f'http://localhost:{os.environ["LLMSTACK_PORT"]}')
+    webbrowser.open(f'http://localhost:{os.environ['LLMSTACK_PORT']}')
 
     # Wait for signal to stop
     import signal

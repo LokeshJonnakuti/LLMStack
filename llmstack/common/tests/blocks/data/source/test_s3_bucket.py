@@ -1,7 +1,9 @@
-import unittest
 import os
+import unittest
 
-from llmstack.common.blocks.data.source.s3_bucket import S3Bucket, S3BucketConfiguration, S3BucketInput
+from llmstack.common.blocks.data.source.s3_bucket import S3Bucket
+from llmstack.common.blocks.data.source.s3_bucket import S3BucketConfiguration
+from llmstack.common.blocks.data.source.s3_bucket import S3BucketInput
 
 
 class S3BucketTestCase(unittest.TestCase):
@@ -14,19 +16,25 @@ class S3BucketTestCase(unittest.TestCase):
         result = S3Bucket().process(
             input=S3BucketInput(
                 bucket='makerdojotest',
-                regex='test_shopify.csv'
+                regex='test_shopify.csv',
             ),
             configuration=S3BucketConfiguration(
                 region_name=self.region_name,
                 aws_access_key_id=self.aws_access_key_id,
-                aws_secret_access_key=self.aws_secret_access_key
-            )
+                aws_secret_access_key=self.aws_secret_access_key,
+            ),
         )
         self.assertTrue(len(result.documents) == 1)
-        self.assertEqual(result.documents[0].metadata.get(
-            'file_name'), 'makerdojotest/test_shopify.csv')
-        self.assertEqual(result.documents[0].metadata.get(
-            'HTTPHeaders').get('content-type'), 'text/csv')
+        self.assertEqual(
+            result.documents[0].metadata.get(
+            'file_name',
+            ), 'makerdojotest/test_shopify.csv',
+        )
+        self.assertEqual(
+            result.documents[0].metadata.get(
+            'HTTPHeaders',
+            ).get('content-type'), 'text/csv',
+        )
 
 
 if __name__ == '__main__':

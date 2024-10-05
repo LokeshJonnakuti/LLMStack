@@ -1,11 +1,9 @@
-
 from django.conf import settings
 
 from .handlers.datasource_processor import DataSourceProcessor
 from .models import DataSourceType
-# Import all data source types here
-
 from llmstack.common.utils.module_loader import get_all_sub_classes
+# Import all data source types here
 
 
 def get_data_source_type_interface_subclasses():
@@ -13,8 +11,11 @@ def get_data_source_type_interface_subclasses():
     allowed_packages = settings.DATASOURCE_TYPE_PROVIDERS
 
     for package in allowed_packages:
-        subclasses.extend(get_all_sub_classes(
-            package, DataSourceProcessor))
+        subclasses.extend(
+            get_all_sub_classes(
+            package, DataSourceProcessor,
+            ),
+        )
 
     return subclasses
 

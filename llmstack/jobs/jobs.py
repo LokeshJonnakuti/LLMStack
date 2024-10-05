@@ -1,7 +1,7 @@
-from llmstack.apps.models import App
 from django.test import RequestFactory
 
 from llmstack.apps.apis import AppViewSet
+from llmstack.apps.models import App
 
 
 def run_app(app_id=None, input_data=None, *args, **kwargs):
@@ -24,10 +24,10 @@ def run_app(app_id=None, input_data=None, *args, **kwargs):
                 'code' : response.status_code,
                 'detail': response.status_text,
             })
-    
+
     return results, errors
 
 def refresh_datasource(datasource_entries=[], *args, **kwargs):
     from llmstack.datasources.apis import DataSourceViewSet
-    
+
     return None, None

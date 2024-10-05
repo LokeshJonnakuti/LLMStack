@@ -2,10 +2,10 @@ import logging
 import os
 import uuid
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.template import Context
 from django.template import Template
-from django.conf import settings
 
 from llmstack.apps.models import App
 
@@ -25,7 +25,9 @@ def index(request):
     with open(os.path.join(settings.REACT_APP_DIR, 'build', 'index.html')) as f:
         template = Template(f.read())
         context = Context(
-            {'page_title': page_title, 'page_description': None,
-                'page_keywords': None, 'site_name': None},
+            {
+                'page_title': page_title, 'page_description': None,
+                'page_keywords': None, 'site_name': None,
+            },
         )
         return HttpResponse(template.render(context=context))

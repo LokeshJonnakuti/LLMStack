@@ -1,15 +1,16 @@
 import uuid
-import django_rq
-
 from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
+
+import django_rq
 from django.conf import settings
 from rq.job import Job
-from queue import Queue
 
 
 class ProcessingJob(Job):
     _use_redis = settings.USE_REMOTE_JOB_QUEUE if hasattr(
-        settings, 'USE_REMOTE_JOB_QUEUE') else True
+        settings, 'USE_REMOTE_JOB_QUEUE',
+    ) else True
 
     @property
     def queue_name(self):

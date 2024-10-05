@@ -46,7 +46,8 @@ class TempWeaviate(Weaviate):
         content = content
         document = Document(
             page_content_key=self.CONTENT_KEY, page_content=content, metadata={
-                'source': kwargs.get('source', 'temp')},
+                'source': kwargs.get('source', 'temp'),
+            },
         )
         return self.add_text(index_name, document, **kwargs)
 
