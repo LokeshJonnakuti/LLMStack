@@ -1,6 +1,10 @@
-import unittest
 import os
-from llmstack.common.blocks.llm.stabilityai import StabilityAIText2ImageGrpcProcessorInput, StabilityAIGrpcProcessorConfiguration, StabilityAIText2ImageGrpcProcessor, StabilityAIGrpcInputEnvironment
+import unittest
+
+from llmstack.common.blocks.llm.stabilityai import StabilityAIGrpcInputEnvironment
+from llmstack.common.blocks.llm.stabilityai import StabilityAIGrpcProcessorConfiguration
+from llmstack.common.blocks.llm.stabilityai import StabilityAIText2ImageGrpcProcessor
+from llmstack.common.blocks.llm.stabilityai import StabilityAIText2ImageGrpcProcessorInput
 
 
 class StabilityAIText2ImageGrpcProcessorTestCase(unittest.TestCase):
@@ -16,7 +20,7 @@ class StabilityAIText2ImageGrpcProcessorTestCase(unittest.TestCase):
     def test_valid_text2image(self):
         result = StabilityAIText2ImageGrpcProcessor(
             configuration=StabilityAIGrpcProcessorConfiguration().dict(),
-        ).process(input=StabilityAIText2ImageGrpcProcessorInput(prompt=["apple"], env=StabilityAIGrpcInputEnvironment(stability_ai_api_key=self.api_key)).dict())
+        ).process(input=StabilityAIText2ImageGrpcProcessorInput(prompt=['apple'], env=StabilityAIGrpcInputEnvironment(stability_ai_api_key=self.api_key)).dict())
 
         self.assertTrue(len(result.answer) > 0)
 

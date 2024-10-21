@@ -30,13 +30,18 @@ urlpatterns = [
     path(
         'api/apps/<str:uid>',
         apis.AppViewSet.as_view(
-            {'get': 'get', 'patch': 'patch', 'delete': 'delete'}),
+            {'get': 'get', 'patch': 'patch', 'delete': 'delete'},
+        ),
     ),
     path('api/apps/<str:uid>/run', apis.AppViewSet.as_view({'post': 'run'})),
-    path('api/apps/<str:uid>/versions',
-         apis.AppViewSet.as_view({'get': 'versions'})),
-    path('api/apps/<str:uid>/versions/<str:version>',
-         apis.AppViewSet.as_view({'get': 'versions'})),
+    path(
+        'api/apps/<str:uid>/versions',
+        apis.AppViewSet.as_view({'get': 'versions'}),
+    ),
+    path(
+        'api/apps/<str:uid>/versions/<str:version>',
+        apis.AppViewSet.as_view({'get': 'versions'}),
+    ),
     path(
         'api/apps/<str:uid>/discord/run',
         apis.AppViewSet.as_view({'post': 'run_discord'}),

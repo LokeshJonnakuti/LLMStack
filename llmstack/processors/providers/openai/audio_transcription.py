@@ -3,12 +3,12 @@ import logging
 from typing import Optional
 
 import openai
-
 from asgiref.sync import async_to_sync
 from pydantic import Field
 
 from llmstack.common.utils.utils import validate_parse_data_uri
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class AudioTranscription(ApiProcessorInterface[AudioTranscriptionInput, AudioTra
     def provider_slug() -> str:
         return 'openai'
 
-    def process(self) -> dict:        
+    def process(self) -> dict:
         if self._input.file and len(self._input.file) > 0:
             mime_type, file_name, base64_encoded_data = validate_parse_data_uri(
                 self._input.file,

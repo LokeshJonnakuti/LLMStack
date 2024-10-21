@@ -5,8 +5,8 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField as PGArrayField
 from django.db import connection
 from django.db import models
-from django.dispatch import receiver
 from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 from llmstack.common.utils.db_models import ArrayField
 

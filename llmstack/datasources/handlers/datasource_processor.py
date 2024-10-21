@@ -1,28 +1,30 @@
-from enum import Enum
 import json
 import logging
-
-from django.conf import settings
+from enum import Enum
 from string import Template
 from typing import List
 from typing import Optional
 from typing import TypeVar
+
+from django.conf import settings
 from pydantic import BaseModel
 
+from llmstack.base.models import Profile
+from llmstack.base.models import VectorstoreEmbeddingEndpoint
+from llmstack.common.blocks.base.processor import BaseInputType
+from llmstack.common.blocks.base.processor import ProcessorInterface
 from llmstack.common.blocks.base.schema import BaseSchema as _Schema
-from llmstack.common.blocks.base.processor import ProcessorInterface, BaseInputType
+from llmstack.common.blocks.data.store.vectorstore import Document
+from llmstack.common.blocks.data.store.vectorstore import DocumentQuery
+from llmstack.common.blocks.data.store.vectorstore import VectorStoreInterface
 from llmstack.common.blocks.data.store.vectorstore.chroma import Chroma
+from llmstack.common.blocks.data.store.vectorstore.weaviate import Weaviate as PromptlyWeaviate
 from llmstack.common.blocks.embeddings.openai_embedding import EmbeddingAPIProvider
 from llmstack.common.blocks.embeddings.openai_embedding import OpenAIEmbeddingConfiguration
 from llmstack.common.blocks.embeddings.openai_embedding import OpenAIEmbeddingInput
 from llmstack.common.blocks.embeddings.openai_embedding import OpenAIEmbeddingOutput
 from llmstack.common.blocks.embeddings.openai_embedding import OpenAIEmbeddingsProcessor
-from llmstack.common.blocks.data.store.vectorstore import Document
-from llmstack.common.blocks.data.store.vectorstore import DocumentQuery
-from llmstack.common.blocks.data.store.vectorstore import VectorStoreInterface
-from llmstack.common.blocks.data.store.vectorstore.weaviate import Weaviate as PromptlyWeaviate
 from llmstack.datasources.models import DataSource
-from llmstack.base.models import Profile, VectorstoreEmbeddingEndpoint
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +110,7 @@ class DataSourceProcessor(ProcessorInterface[BaseInputType, None, None]):
         embedding_endpoint_configuration = None
 
         default_vector_database = settings.VECTOR_DATABASES.get('default')['ENGINE']
-        
+
         if default_vector_database == 'weaviate':
             if vectorstore_embedding_endpoint == VectorstoreEmbeddingEndpoint.OPEN_AI:
                 promptly_weaviate = PromptlyWeaviate(
@@ -140,7 +142,8 @@ class DataSourceProcessor(ProcessorInterface[BaseInputType, None, None]):
                     deploymentId=self.profile.weaviate_text2vec_config['deploymentId'],
                     apiVersion='2022-12-01',
                     api_key=self.profile.get_vendor_key(
-                        'azure_openai_api_key'),
+                        'azure_openai_api_key',
+                    ),
                 )
 
             # Get Weaviate schema
@@ -192,7 +195,8 @@ class DataSourceProcessor(ProcessorInterface[BaseInputType, None, None]):
                     **document.metadata, **data.metadata,
                 },
                 embeddings=self._get_document_embeddings(
-                    document.page_content),
+                    document.page_content,
+                ),
             ), documents,
         )
 
@@ -207,7 +211,7 @@ class DataSourceProcessor(ProcessorInterface[BaseInputType, None, None]):
             return self.hybrid_search(query, **kwargs)
         else:
             return self.similarity_search(query, **kwargs)
-        
+
     def similarity_search(self, query: str, **kwargs) -> List[dict]:
 
         document_query = DocumentQuery(
@@ -242,7 +246,7 @@ class DataSourceProcessor(ProcessorInterface[BaseInputType, None, None]):
         # Delete old data
         self.delete_entry(data)
         # Add new data
-        return self.add_entry(DataSourceEntryItem(**data["input"]))
+        return self.add_entry(DataSourceEntryItem(**data['input']))
 
     def delete_all_entries(self) -> None:
         self.vectorstore.delete_index(
@@ -258,7 +262,7 @@ class DataSourceProcessor(ProcessorInterface[BaseInputType, None, None]):
                     f'Fetching document {content_key} {self.datasource_class_name} from vectorstore.',
                 )
                 document = self.vectorstore.get_document_by_id(
-                    index_name=self.datasource_class_name, document_id=document_id, content_key=content_key
+                    index_name=self.datasource_class_name, document_id=document_id, content_key=content_key,
                 )
 
                 if documents is not None:

@@ -7,14 +7,20 @@ from rest_framework import viewsets
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response as DRFResponse
 
-from llmstack.apps.models import App, AppVisibility
+from llmstack.apps.models import App
+from llmstack.apps.models import AppVisibility
 from llmstack.apps.serializers import AppSerializer
-from llmstack.datasources.models import DataSource, DataSourceEntry, DataSourceVisibility
-from llmstack.datasources.serializers import DataSourceEntrySerializer, DataSourceSerializer
-from llmstack.datasources.types import DataSourceTypeFactory
-from llmstack.organizations.models import Organization, OrganizationSettings
-from llmstack.organizations.serializers import OrganizationSerializer, OrganizationSettingsSerializer
 from llmstack.base.models import Profile
+from llmstack.datasources.models import DataSource
+from llmstack.datasources.models import DataSourceEntry
+from llmstack.datasources.models import DataSourceVisibility
+from llmstack.datasources.serializers import DataSourceEntrySerializer
+from llmstack.datasources.serializers import DataSourceSerializer
+from llmstack.datasources.types import DataSourceTypeFactory
+from llmstack.organizations.models import Organization
+from llmstack.organizations.models import OrganizationSettings
+from llmstack.organizations.serializers import OrganizationSerializer
+from llmstack.organizations.serializers import OrganizationSettingsSerializer
 
 logger = logging.getLogger(__name__)
 

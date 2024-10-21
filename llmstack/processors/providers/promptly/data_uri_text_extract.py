@@ -8,12 +8,15 @@ from asgiref.sync import async_to_sync
 from pydantic import conint
 from pydantic import Field
 
-from llmstack.common.blocks.data.store.vectorstore import Document, DocumentQuery
+from llmstack.common.blocks.data.store.vectorstore import Document
+from llmstack.common.blocks.data.store.vectorstore import DocumentQuery
 from llmstack.common.blocks.data.store.vectorstore.chroma import Chroma
-from llmstack.common.utils.text_extract import extract_text_from_b64_json, ExtraParams
 from llmstack.common.utils.splitter import SpacyTextSplitter
+from llmstack.common.utils.text_extract import extract_text_from_b64_json
+from llmstack.common.utils.text_extract import ExtraParams
 from llmstack.common.utils.utils import validate_parse_data_uri
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 
 logger = logging.getLogger(__name__)
 
@@ -114,12 +117,16 @@ class DataUriTextExtract(ApiProcessorInterface[DataUriTextExtractorInput, DataUr
         if query and self.storage_index_name:
             documents: List[Document] = self.temp_store.hybrid_search(
                 self.storage_index_name, document_query=DocumentQuery(
-                    query=query, limit=self._config.document_limit),
+                    query=query, limit=self._config.document_limit,
+                ),
             )
 
             async_to_sync(self._output_stream.write)(
-                DataUriTextExtractorOutput(text='\n'.join(
-                    [document.page_content for document in documents])),
+                DataUriTextExtractorOutput(
+                    text='\n'.join(
+                    [document.page_content for document in documents],
+                    ),
+                ),
             )
             output = self._output_stream.finalize()
             return output
@@ -145,19 +152,26 @@ class DataUriTextExtract(ApiProcessorInterface[DataUriTextExtractorInput, DataUr
                 futures = [
                     executor.submit(
                         self.temp_store.add_text,
-                        index_name, Document(page_content_key="content", page_content=text_chunk, metadata={
-                            'source': file_name}),
+                        index_name, Document(
+                            page_content_key='content', page_content=text_chunk, metadata={
+                            'source': file_name,
+                            },
+                        ),
                     ) for text_chunk in text_chunks
                 ]
                 concurrent.futures.wait(futures)
             documents: List[Document] = self.temp_store.hybrid_search(
                 self.storage_index_name, document_query=DocumentQuery(
-                    query=query, limit=self._config.document_limit),
+                    query=query, limit=self._config.document_limit,
+                ),
             )
 
             async_to_sync(self._output_stream.write)(
-                DataUriTextExtractorOutput(text='\n'.join(
-                    [document.page_content for document in documents])),
+                DataUriTextExtractorOutput(
+                    text='\n'.join(
+                    [document.page_content for document in documents],
+                    ),
+                ),
             )
             output = self._output_stream.finalize()
             return output

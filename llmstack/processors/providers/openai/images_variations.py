@@ -7,9 +7,18 @@ from asgiref.sync import async_to_sync
 from pydantic import conint
 from pydantic import Field
 
-from llmstack.common.blocks.llm.openai import OpenAIAPIInputEnvironment, OpenAIFile, OpenAIImageVariationsProcessor, OpenAIImageVariationsProcessorConfiguration, OpenAIImageVariationsProcessorInput, OpenAIImageVariationsProcessorOutput, Size
-from llmstack.common.utils.utils import get_key_or_raise, validate_parse_data_uri
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema, IMAGE_WIDGET_NAME
+from llmstack.common.blocks.llm.openai import OpenAIAPIInputEnvironment
+from llmstack.common.blocks.llm.openai import OpenAIFile
+from llmstack.common.blocks.llm.openai import OpenAIImageVariationsProcessor
+from llmstack.common.blocks.llm.openai import OpenAIImageVariationsProcessorConfiguration
+from llmstack.common.blocks.llm.openai import OpenAIImageVariationsProcessorInput
+from llmstack.common.blocks.llm.openai import OpenAIImageVariationsProcessorOutput
+from llmstack.common.blocks.llm.openai import Size
+from llmstack.common.utils.utils import get_key_or_raise
+from llmstack.common.utils.utils import validate_parse_data_uri
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import IMAGE_WIDGET_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +92,10 @@ class ImagesVariations(ApiProcessorInterface[ImagesVariationsInput, ImagesVariat
                     self._env, 'openai_api_key', 'No openai_api_key found in _env',
                 ),
             ),
-            image=OpenAIFile(name=file_name, content=image_data,
-                             mime_type=mime_type),
+            image=OpenAIFile(
+                name=file_name, content=image_data,
+                mime_type=mime_type,
+            ),
         )
         response: OpenAIImageVariationsProcessorOutput = OpenAIImageVariationsProcessor(
             configuration=self._config.dict(

@@ -7,11 +7,10 @@ from typing import Optional
 
 import requests
 import weaviate
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from pydantic import BaseModel
 from pydantic import Field
-
-from django.conf import settings
 
 WEAVIATE_URL = settings.WEAVIATE_URL
 

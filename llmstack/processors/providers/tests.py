@@ -13,8 +13,13 @@ def test_cohere_generate():
     assert Generate.name() == 'cohere/generate'
 
     response = processor.process(
-        {'prompt': 'Hello world!', '_env': {'cohere_api_key': os.getenv(
-            'COHERE_API_KEY', 'Qg8PfTe4Apd7spTLkaxIbO4ynLX4Xx6TfhpI5Zno')}},
+        {
+            'prompt': 'Hello world!', '_env': {
+                'cohere_api_key': os.getenv(
+                'COHERE_API_KEY', 'Qg8PfTe4Apd7spTLkaxIbO4ynLX4Xx6TfhpI5Zno',
+                ),
+            },
+        },
     )
     assert response.choices is not None
     assert len(response.choices) > 0

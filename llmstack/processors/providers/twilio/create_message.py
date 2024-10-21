@@ -4,10 +4,15 @@ from typing import Any
 from typing import Optional
 
 from asgiref.sync import async_to_sync
-from llmstack.common.blocks.http import BasicAuth, HttpAPIProcessor, HttpAPIProcessorInput, HttpMethod, FormBody
 
+from llmstack.common.blocks.http import BasicAuth
+from llmstack.common.blocks.http import FormBody
+from llmstack.common.blocks.http import HttpAPIProcessor
+from llmstack.common.blocks.http import HttpAPIProcessorInput
+from llmstack.common.blocks.http import HttpMethod
 from llmstack.play.actor import BookKeepingData
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
 from llmstack.processors.providers.twilio import TwilioSmsWebhookRequest
 
 logger = logging.getLogger(__name__)
@@ -53,28 +58,30 @@ class TwilioCreateMessageProcessor(ApiProcessorInterface[TwilioCreateMessageInpu
                 method=HttpMethod.POST,
                 headers={},
                 authorization=BasicAuth(username=account_sid, password=auth_token),
-                body=FormBody(form_body={
-                    'To': to_,
-                    'From': from_,
-                    'Body': message
-                }),
-                )
+                body=FormBody(
+                    form_body={
+                        'To': to_,
+                        'From': from_,
+                        'Body': message,
+                    },
+                ),
+        )
         response = http_processor.process(input.dict()).dict()
         return response
 
-        
+
 
     def process(self) -> dict:
         self._twilio_api_response = None
         input = self._input.dict()
         response = self._send_message(message=input['body'], to_=input['to'], from_=self._config.phone_number, account_sid=self._config.account_sid, auth_token=self._config.auth_token)
-        
+
         self._twilio_api_response = {
             'code': response['code'],
             'headers': response['headers'],
             'text': response['text'],
         }
-                
+
         async_to_sync(self._output_stream.write)(
             TwilioCreateMessageOutput(code=response['code']),
         )
@@ -85,19 +92,21 @@ class TwilioCreateMessageProcessor(ApiProcessorInterface[TwilioCreateMessageInpu
         input = self._input.dict()
 
         logger.error(f'Error in TwilioCreateMessageProcessor: {error}')
-        
+
         error_msg = '\n'.join(error.values()) if isinstance(
-            error, dict) else 'Error in processing request'
+            error, dict,
+        ) else 'Error in processing request'
 
         response = self._send_message(
-            error_msg, to_=input['to'], from_=self._config.phone_number, account_sid=self._config.account_sid, auth_token=self._config.auth_token)
-        
+            error_msg, to_=input['to'], from_=self._config.phone_number, account_sid=self._config.account_sid, auth_token=self._config.auth_token,
+        )
+
         self._twilio_api_response = {
             'code': response['code'],
             'headers': response['headers'],
             'text': response['text'],
         }
-                
+
         async_to_sync(self._output_stream.write)(
             TwilioCreateMessageOutput(code=response['code']),
         )
