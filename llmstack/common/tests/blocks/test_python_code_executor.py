@@ -1,5 +1,8 @@
 import unittest
-from llmstack.common.blocks.python_code_executor import PythonCodeExecutorProcessor, PythonCodeExecutorProcessorInput, PythonCodeExecutorProcessorConfiguration
+
+from llmstack.common.blocks.python_code_executor import PythonCodeExecutorProcessor
+from llmstack.common.blocks.python_code_executor import PythonCodeExecutorProcessorConfiguration
+from llmstack.common.blocks.python_code_executor import PythonCodeExecutorProcessorInput
 
 
 class PythonCodeExecutorTestCase(unittest.TestCase):
@@ -8,9 +11,10 @@ class PythonCodeExecutorTestCase(unittest.TestCase):
         result = PythonCodeExecutorProcessor(
         ).process(
             input=PythonCodeExecutorProcessorInput(code=code),
-            configuration=PythonCodeExecutorProcessorConfiguration())
-        self.assertEqual(result.output, "4")
-        self.assertTrue(result.logs[0].endswith("4"))
+            configuration=PythonCodeExecutorProcessorConfiguration(),
+        )
+        self.assertEqual(result.output, '4')
+        self.assertTrue(result.logs[0].endswith('4'))
 
 
 if __name__ == '__main__':

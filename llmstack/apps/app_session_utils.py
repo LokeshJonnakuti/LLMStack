@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime
-from django.conf import settings
-from django.core.cache import caches
 
 import orjson as json
+from django.conf import settings
+from django.core.cache import caches
 
 APP_SESSION_TIMEOUT = settings.APP_SESSION_TIMEOUT
 
@@ -48,16 +48,18 @@ def create_app_session_data(app_session, endpoint, data):
         'last_updated_at': str(datetime.now()),
     }
     app_session_data_store.set(
-        f'app_session_data_{app_session["uuid"]}_{endpoint_id}', json.dumps(
-            app_session_data), APP_SESSION_TIMEOUT,
+        f'app_session_data_{app_session['uuid']}_{endpoint_id}', json.dumps(
+            app_session_data,
+        ), APP_SESSION_TIMEOUT,
     )
     return app_session_data
 
 
 def save_app_session_data(app_session_data):
     app_session_data_store.set(
-        f'app_session_data_{app_session_data["app_session"]["uuid"]}_{app_session_data["endpoint"]}', json.dumps(
-            app_session_data), APP_SESSION_TIMEOUT,
+        f'app_session_data_{app_session_data['app_session']['uuid']}_{app_session_data['endpoint']}', json.dumps(
+            app_session_data,
+        ), APP_SESSION_TIMEOUT,
     )
     return app_session_data
 
@@ -69,7 +71,7 @@ def get_app_session_data(app_session, endpoint):
     endpoint_id = endpoint['id'] if isinstance(endpoint, dict) else endpoint.id
 
     app_session_data = app_session_data_store.get(
-        f'app_session_data_{app_session["uuid"]}_{endpoint_id}',
+        f'app_session_data_{app_session['uuid']}_{endpoint_id}',
     )
     if app_session_data is None:
         return None

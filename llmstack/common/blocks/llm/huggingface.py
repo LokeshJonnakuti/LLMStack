@@ -4,13 +4,8 @@ from typing import Generic
 from typing import Optional
 from typing import Union
 
-from llmstack.common.blocks.http import BearerTokenAuth
-from llmstack.common.blocks.http import HttpAPIProcessor
-from llmstack.common.blocks.http import HttpAPIProcessorConfiguration
-from llmstack.common.blocks.http import HttpAPIProcessorInput
-from llmstack.common.blocks.http import HttpAPIProcessorOutput
-from llmstack.common.blocks.http import HttpMethod
-from llmstack.common.blocks.http import JsonBody
+from pydantic import Field
+
 from llmstack.common.blocks.base.processor import BaseConfiguration
 from llmstack.common.blocks.base.processor import BaseConfigurationType
 from llmstack.common.blocks.base.processor import BaseInput
@@ -18,8 +13,14 @@ from llmstack.common.blocks.base.processor import BaseInputEnvironment
 from llmstack.common.blocks.base.processor import BaseInputType
 from llmstack.common.blocks.base.processor import BaseOutput
 from llmstack.common.blocks.base.processor import BaseOutputType
+from llmstack.common.blocks.http import BearerTokenAuth
+from llmstack.common.blocks.http import HttpAPIProcessor
+from llmstack.common.blocks.http import HttpAPIProcessorConfiguration
+from llmstack.common.blocks.http import HttpAPIProcessorInput
+from llmstack.common.blocks.http import HttpAPIProcessorOutput
+from llmstack.common.blocks.http import HttpMethod
+from llmstack.common.blocks.http import JsonBody
 from llmstack.common.blocks.llm import LLMBaseProcessor
-from pydantic import Field
 
 
 class HuggingfaceEndpointProcessorInputEnvironment(BaseInputEnvironment):

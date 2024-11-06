@@ -1,19 +1,21 @@
 import logging
 import time
-from typing import Any, Optional, TypeVar
+from typing import Any
+from typing import Optional
+from typing import TypeVar
 
 import jinja2
 import ujson as json
-from pydantic import AnyUrl, BaseModel
+from pydantic import AnyUrl
+from pydantic import BaseModel
 
-from llmstack.common.blocks.base.processor import (
-    BaseConfigurationType,
-    BaseInputType,
-    BaseOutputType,
-    ProcessorInterface,
-)
+from llmstack.common.blocks.base.processor import BaseConfigurationType
+from llmstack.common.blocks.base.processor import BaseInputType
+from llmstack.common.blocks.base.processor import BaseOutputType
+from llmstack.common.blocks.base.processor import ProcessorInterface
 from llmstack.common.blocks.base.schema import BaseSchema as _Schema
-from llmstack.play.actor import Actor, BookKeepingData
+from llmstack.play.actor import Actor
+from llmstack.play.actor import BookKeepingData
 from llmstack.play.actors.agent import ToolInvokeInput
 from llmstack.play.utils import extract_jinja2_variables
 
@@ -77,8 +79,10 @@ class ApiProcessorInterface(ProcessorInterface[BaseInputType, BaseOutputType, Ba
     """
 
     def __init__(self, input, config, env, output_stream=None, dependencies=[], all_dependencies=[], session_data=None, id=None):
-        Actor.__init__(self, dependencies=dependencies,
-                       all_dependencies=all_dependencies)
+        Actor.__init__(
+            self, dependencies=dependencies,
+            all_dependencies=all_dependencies,
+        )
 
         # TODO: This is for backward compatibility. Remove this once all the processors are updated
         if 'datasource' in config and isinstance(config['datasource'], str):
@@ -193,9 +197,11 @@ class ApiProcessorInterface(ProcessorInterface[BaseInputType, BaseOutputType, Ba
         # Hydrate the input and config before processing
         try:
             self._input = hydrate_input(
-                self._input, message) if message else self._input
+                self._input, message,
+            ) if message else self._input
             self._config = hydrate_input(
-                self._config, message) if self._config and message else self._config
+                self._config, message,
+            ) if self._config and message else self._config
             output = self.process()
         except Exception as e:
             output = {
@@ -218,20 +224,24 @@ class ApiProcessorInterface(ProcessorInterface[BaseInputType, BaseOutputType, Ba
 
     def tool_invoke_input(self, tool_args: dict) -> ToolInvokeInput:
         return self._get_input_class()(
-            **{**self._input.dict(), **tool_args})
+            **{**self._input.dict(), **tool_args},
+        )
 
     def invoke(self, message: ToolInvokeInput) -> Any:
         try:
             self._input = hydrate_input(
-                self._input, message.input) if message else self._input
+                self._input, message.input,
+            ) if message else self._input
             self._config = hydrate_input(
-                self._config, message.input) if self._config else self._config
+                self._config, message.input,
+            ) if self._config else self._config
 
             # Merge tool args with input
             self._input = self.tool_invoke_input(message.tool_args)
 
             logger.info(
-                f'Invoking tool {message.tool_name} with args {message.tool_args}')
+                f'Invoking tool {message.tool_name} with args {message.tool_args}',
+            )
             output = self.process()
         except Exception as e:
             logger.exception(e)

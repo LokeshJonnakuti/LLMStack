@@ -51,7 +51,7 @@ def get_ui_schema_from_json_schema(json_schema):
         elif 'enum' in prop_schema_dict:
             ui_prop['ui:widget'] = 'select'
             ui_prop['ui:options'] = {
-                'enumOptions': [{'value': val, 'label': val} for val in prop_schema_dict['enum']]
+                'enumOptions': [{'value': val, 'label': val} for val in prop_schema_dict['enum']],
             }
 
         if 'widget' in prop_schema_dict:
@@ -60,7 +60,7 @@ def get_ui_schema_from_json_schema(json_schema):
         if 'options' in prop_schema_dict:
             ui_prop['ui:options'] = {
                 'enumOptions': [{'value': val, 'label': val} for val in prop_schema_dict['options']],
-                'values': prop_schema_dict['options']
+                'values': prop_schema_dict['options'],
             }
 
         if prop_schema_dict.get('format') == 'date-time':
@@ -68,13 +68,14 @@ def get_ui_schema_from_json_schema(json_schema):
 
         # Unless explicitly mentioned, all properties are advanced parameters
         ui_prop['ui:advanced'] = prop_schema_dict.get(
-            'advanced_parameter', True)
+            'advanced_parameter', True,
+        )
 
         return ui_prop
 
     ui_schema = {
         'ui:order': list(json_schema['properties'].keys()),
-        'properties': {}
+        'properties': {},
     }
 
     for p_key, p_val in json_schema['properties'].items():

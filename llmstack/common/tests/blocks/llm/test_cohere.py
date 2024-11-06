@@ -1,7 +1,10 @@
-import unittest
 import os
+import unittest
 
-from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessor, CohereGenerateAPIProcessorInput, CohereGenerateAPIProcessorConfiguration, CohereAPIInputEnvironment
+from llmstack.common.blocks.llm.cohere import CohereAPIInputEnvironment
+from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessor
+from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessorConfiguration
+from llmstack.common.blocks.llm.cohere import CohereGenerateAPIProcessorInput
 
 
 class CohereGenerateAPIProcessorTestCase(unittest.TestCase):
@@ -17,7 +20,7 @@ class CohereGenerateAPIProcessorTestCase(unittest.TestCase):
     def test_valid_generate(self):
         result = CohereGenerateAPIProcessor(
             configuration=CohereGenerateAPIProcessorConfiguration().dict(),
-        ).process(input=CohereGenerateAPIProcessorInput(prompt="Hi", env=CohereAPIInputEnvironment(cohere_api_key=self.api_key)).dict())
+        ).process(input=CohereGenerateAPIProcessorInput(prompt='Hi', env=CohereAPIInputEnvironment(cohere_api_key=self.api_key)).dict())
 
         self.assertTrue(len(result.choices) > 0)
 

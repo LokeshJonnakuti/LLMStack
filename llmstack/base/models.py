@@ -34,7 +34,7 @@ class AbstractProfile(models.Model):
 
     user = models.OneToOneField(
         User, on_delete=models.DO_NOTHING, help_text='User this profile belongs to',
-        related_name='user'
+        related_name='user',
     )
     uuid = models.UUIDField(default=uuid.uuid4, help_text='User UUID')
     token = models.CharField(
@@ -43,7 +43,7 @@ class AbstractProfile(models.Model):
     )
     organization = models.ForeignKey(
         'organizations.Organization', on_delete=models.DO_NOTHING, help_text='Organization this user belongs to', null=True, default=None, blank=True,
-        related_name='organization'
+        related_name='organization',
     )
     azure_openai_api_key = models.CharField(
         max_length=256, default=None, help_text='Azure OpenAI key to use with Azure backend', null=True, blank=True,
@@ -157,12 +157,14 @@ class AbstractProfile(models.Model):
 
     def add_connection(self, connection):
         connection_id = connection['id'] if 'id' in connection else str(
-            uuid.uuid4())
+            uuid.uuid4(),
+        )
         connection_json = json.dumps(connection)
         if not self._connections:
             self._connections = {}
         self._connections[connection_id] = self.encrypt_value(
-            connection_json).decode('utf-8')
+            connection_json,
+        ).decode('utf-8')
         self.save(update_fields=['_connections'])
 
     def delete_connection(self, id):

@@ -5,15 +5,14 @@ import uuid
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.http import HttpRequest, QueryDict
+from django.http import HttpRequest
+from django.http import QueryDict
 
 from llmstack.connections.actors import ConnectionActivationActor
-from llmstack.connections.models import (
-    Connection,
-    ConnectionActivationInput,
-    ConnectionActivationOutput,
-    ConnectionStatus,
-)
+from llmstack.connections.models import Connection
+from llmstack.connections.models import ConnectionActivationInput
+from llmstack.connections.models import ConnectionActivationOutput
+from llmstack.connections.models import ConnectionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -120,19 +119,28 @@ class ConnectionConsumer(AsyncWebsocketConsumer):
                 if isinstance(c, Connection):
                     if c.status == ConnectionStatus.ACTIVE:
                         await self.connection_activation_actor.set_connection(c)
-                    await self.send(text_data=json.dumps(
-                        {'event': 'success' if c.status == ConnectionStatus.ACTIVE else 'error'}))
+                    await self.send(
+                        text_data=json.dumps(
+                        {'event': 'success' if c.status == ConnectionStatus.ACTIVE else 'error'},
+                        ),
+                    )
                     self.connection_activation_actor.stop()
                 elif isinstance(c, ConnectionActivationOutput):
-                    await self.send(text_data=json.dumps(
-                        {'event': 'output', 'output': c.data}))
+                    await self.send(
+                        text_data=json.dumps(
+                        {'event': 'output', 'output': c.data},
+                        ),
+                    )
                 elif isinstance(c, dict):
                     connection = c.get('connection', None)
                     if connection:
                         await self.connection_activation_actor.set_connection(connection)
                     if c.get('error', None):
-                        await self.send(text_data=json.dumps(
-                            {'event': 'error', 'error': c.get('error')}))
+                        await self.send(
+                            text_data=json.dumps(
+                            {'event': 'error', 'error': c.get('error')},
+                            ),
+                        )
                 await asyncio.sleep(0.01)
         except Exception as e:
             logger.exception(e)
@@ -158,7 +166,8 @@ class ConnectionConsumer(AsyncWebsocketConsumer):
         if event == 'input' and input == 'terminate':
             try:
                 self.connection_activation_actor.input(
-                    ConnectionActivationInput(data=input))
+                    ConnectionActivationInput(data=input),
+                )
             except Exception:
                 pass
             finally:

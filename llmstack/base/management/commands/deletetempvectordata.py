@@ -8,10 +8,10 @@ from typing import Optional
 
 import requests
 import weaviate
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from pydantic import BaseModel
 from pydantic import Field
-from django.conf import settings
 
 
 WEAVIATE_URL = settings.WEAVIATE_URL
@@ -74,23 +74,23 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--not-dry-run',  action='store_true', 
+            '--not-dry-run',  action='store_true',
             help='Do not perform any actions, just print what would be done.',
         )
-        
+
         parser.add_argument(
             '--duration',
             type=str,
             default='7 days',
-            help='Specify the duration in the format "X days" or "Y mins".'
+            help='Specify the duration in the format "X days" or "Y mins".',
         )
-        
+
     def parse_duration(self, duration_str):
         # Use regular expressions to parse the input duration string
         match = re.match(r'^(\d+)\s*(days?|mins?)$', duration_str, re.IGNORECASE)
         if not match:
             raise ValueError('Invalid duration format. Use "X days" or "Y mins".')
-        
+
         value, unit = match.groups()
         value = int(value)
         if unit.lower() == 'mins':
@@ -101,10 +101,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = not options['not_dry_run']
         duration_str = options.get('duration', '')
-        
+
         if dry_run:
             self.stdout.write('Running in dry-run mode.')
-        
+
         if duration_str:
             try:
                 duration_seconds = self.parse_duration(duration_str)
@@ -113,7 +113,7 @@ class Command(BaseCommand):
             except ValueError as e:
                 self.stderr.write(str(e))
                 return
-            
+
         now = int(datetime.utcnow().timestamp()) * 1000
         weaviate_schema = WeaviateSchema(**get_schema())
         for wclass in weaviate_schema.classes:
@@ -125,7 +125,7 @@ class Command(BaseCommand):
                 ),
             )
             wclass.objects = objects
-        
+
         for wclass in weaviate_schema.classes:
             if wclass.className.startswith('Temp_'):
                 lastUpdateTimestamps = []
@@ -137,13 +137,12 @@ class Command(BaseCommand):
                 lastUpdateTimestamps.sort()
                 if len(lastUpdateTimestamps) > 0 and lastUpdateTimestamps[0] > duration_minutes:
                     self.stdout.write(f'Deleting {wclass.className}...')
-                    self.stdout.write(f'Deleting Objects {" ".join(object_ids)}..."')
-                    result = client.batch.delete_objects(class_name=wclass.className, where={
-                            'path': ['source'],
-                            'operator': 'Like',
-                            'valueString': '*'
-                            }, dry_run=dry_run)
+                    self.stdout.write(f'Deleting Objects {' '.join(object_ids)}..."')
+                    result = client.batch.delete_objects(
+                        class_name=wclass.className, where={
+                        'path': ['source'],
+                        'operator': 'Like',
+                        'valueString': '*',
+                        }, dry_run=dry_run,
+                    )
                     self.stdout.write(json.dumps(result, indent=2))
-                             
-                        
-                    
