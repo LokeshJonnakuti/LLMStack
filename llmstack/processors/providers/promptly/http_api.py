@@ -1,11 +1,17 @@
 import json
 import logging
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 import requests
 from asgiref.sync import async_to_sync
-from pydantic import Field, HttpUrl, root_validator
+from pydantic import Field
+from pydantic import HttpUrl
+from pydantic import root_validator
 from requests.auth import HTTPBasicAuth
 
 from llmstack.common.blocks.base.processor import Schema
@@ -58,57 +64,78 @@ class RequestBodyParameterType(ParameterType):
 
 class HttpAPIProcessorInput(Schema):
     input_data: Optional[str] = Field(
-        description='Input', advanced_parameter=False, widget='textarea')
+        description='Input', advanced_parameter=False, widget='textarea',
+    )
 
 
 class HttpAPIProcessorOutput(Schema):
-    code: int = Field(title='Response code', default=200,
-                      advanced_parameter=False)
+    code: int = Field(
+        title='Response code', default=200,
+        advanced_parameter=False,
+    )
     headers: Dict[str, str] = Field(
-        title='Response headers', default={}, advanced_parameter=False)
+        title='Response headers', default={}, advanced_parameter=False,
+    )
     text: Optional[str] = Field(
-        title='Response text', default=None, advanced_parameter=False)
+        title='Response text', default=None, advanced_parameter=False,
+    )
     content_json: Optional[Union[Dict[str, Any], List[Dict]]] = Field(
-        title='Response JSON', default=None, advanced_parameter=False)
-    is_ok: bool = Field(title='Is response OK',
-                        default=True, advanced_parameter=False)
+        title='Response JSON', default=None, advanced_parameter=False,
+    )
+    is_ok: bool = Field(
+        title='Is response OK',
+        default=True, advanced_parameter=False,
+    )
     url: Optional[str] = Field(
-        title='Response URL', default=None, advanced_parameter=False)
+        title='Response URL', default=None, advanced_parameter=False,
+    )
     encoding: Optional[str] = Field(
-        title='Response encoding', default=None, advanced_parameter=False)
+        title='Response encoding', default=None, advanced_parameter=False,
+    )
     cookies: Optional[Dict[str, str]] = Field(
-        title='Response cookies', default=None, advanced_parameter=False)
+        title='Response cookies', default=None, advanced_parameter=False,
+    )
     elapsed: Optional[int] = Field(
-        title='Response elapsed time', default=None, advanced_parameter=False)
+        title='Response elapsed time', default=None, advanced_parameter=False,
+    )
 
 
 class RequestBody(Schema):
     parameters: List[RequestBodyParameterType] = Field(
-        title='Request body parameters', default=[], advanced_parameter=False)
+        title='Request body parameters', default=[], advanced_parameter=False,
+    )
 
 
 class HttpAPIProcessorConfiguration(Schema):
     path: str = Field(
-        description='Path to append to the URL. You can add a prameter by encolosing it in single brackets {param}', advanced_parameter=False)
+        description='Path to append to the URL. You can add a prameter by encolosing it in single brackets {param}', advanced_parameter=False,
+    )
     method: HttpMethod = Field(
-        default=HttpMethod.GET, advanced_parameter=False)
+        default=HttpMethod.GET, advanced_parameter=False,
+    )
 
     openapi_spec: Optional[str] = Field(
-        description='OpenAPI spec', widget='textarea')
+        description='OpenAPI spec', widget='textarea',
+    )
     openapi_spec_url: Optional[HttpUrl] = Field(
-        description='URL to the OpenAPI spec')
+        description='URL to the OpenAPI spec',
+    )
     parse_openapi_spec: bool = Field(default=True)
     _openapi_spec_parsed: bool = Field(default=False, widget='hidden')
 
     url: Optional[HttpUrl] = Field(
-        description='URL to make the request to', advanced_parameter=False)
+        description='URL to make the request to', advanced_parameter=False,
+    )
     parameters: List[ParameterType] = Field(
-        title='Parameters to pass', default=[], advanced_parameter=False)
+        title='Parameters to pass', default=[], advanced_parameter=False,
+    )
     request_body: Optional[RequestBody] = Field(
-        default=None, advanced_parameter=False)
+        default=None, advanced_parameter=False,
+    )
 
     connection_id: Optional[str] = Field(
-        widget='connection',  advanced_parameter=False)
+        widget='connection',  advanced_parameter=False,
+    )
 
     allow_redirects: Optional[bool] = True
     timeout: Optional[float] = Field(default=5, advanced_parameter=True)
@@ -124,8 +151,11 @@ class HttpAPIProcessorConfiguration(Schema):
                 response = requests.get(openapi_spec_url)
                 openapi_spec = response.text
             if openapi_spec:
-                parsed_spec = parse_openapi_spec(json.loads(
-                    openapi_spec), values['path'], values['method'])
+                parsed_spec = parse_openapi_spec(
+                    json.loads(
+                    openapi_spec,
+                    ), values['path'], values['method'],
+                )
                 values.update(parsed_spec)
                 values['_openapi_spec_parsed'] = True
 
@@ -133,13 +163,15 @@ class HttpAPIProcessorConfiguration(Schema):
         required_fields = []
         for parameter in values['parameters']:
             schema['properties'][parameter.name] = {
-                'type': 'string', 'description': parameter.description}
+                'type': 'string', 'description': parameter.description,
+            }
             if parameter.required:
                 required_fields.append(parameter.name)
         if values['request_body']:
             for parameter in values['request_body'].parameters:
                 schema['properties'][parameter.name] = {
-                    'type': parameter.type, 'description': parameter.description}
+                    'type': parameter.type, 'description': parameter.description,
+                }
                 if parameter.required:
                     required_fields.append(parameter.name)
         schema['required'] = required_fields
@@ -187,17 +219,22 @@ class PromptlyHttpAPIProcessor(ApiProcessorInterface[HttpAPIProcessorInput, Http
         body_data = {}
 
         requred_parameters = [
-            parameter.name for parameter in self._config.parameters if parameter.required]
+            parameter.name for parameter in self._config.parameters if parameter.required
+        ]
         for required_parameter in requred_parameters:
             if required_parameter not in input_data:
                 raise Exception(
-                    f'Required parameter {required_parameter} not found in input')
+                    f'Required parameter {required_parameter} not found in input',
+                )
 
         # Extract all parameters from the url and replace them with the values from the input
         for param in self._config.parameters:
             if param.location == ParameterLocation.PATH:
-                url = url.replace(f'{{{param.name}}}', str(
-                    input_data.get(param.name, '')))
+                url = url.replace(
+                    f'{{{param.name}}}', str(
+                    input_data.get(param.name, ''),
+                    ),
+                )
             elif param.location == ParameterLocation.QUERY:
                 if param.name in input_data:
                     params[param.name] = input_data[param.name]
@@ -207,11 +244,13 @@ class PromptlyHttpAPIProcessor(ApiProcessorInterface[HttpAPIProcessorInput, Http
 
         if self._config.request_body:
             required_body_parameters = [
-                parameter.name for parameter in self._config.request_body.parameters if parameter.required]
+                parameter.name for parameter in self._config.request_body.parameters if parameter.required
+            ]
             for required_body_parameter in required_body_parameters:
                 if required_body_parameter not in input_data:
                     raise Exception(
-                        f'Required parameter {required_body_parameter} not found in input')
+                        f'Required parameter {required_body_parameter} not found in input',
+                    )
 
             for param in self._config.request_body.parameters:
                 if param.name in input_data:
@@ -222,20 +261,24 @@ class PromptlyHttpAPIProcessor(ApiProcessorInterface[HttpAPIProcessorInput, Http
             connection = self._env['connections'][self._config.connection_id]
             if connection['base_connection_type'] == 'credentials':
                 if connection['connection_type_slug'] == 'basic_authentication':
-                    auth = HTTPBasicAuth(connection['configuration']['username'],
-                                         connection['configuration']['password'])
+                    auth = HTTPBasicAuth(
+                        connection['configuration']['username'],
+                        connection['configuration']['password'],
+                    )
                 elif connection['connection_type_slug'] == 'bearer_authentication':
-                    headers["Authorization"] = f"{connection['configuration']['token_prefix']} {connection['configuration']['token']}"
+                    headers['Authorization'] = f"{connection['configuration']['token_prefix']} {connection['configuration']['token']}"
             elif connection['base_connection_type'] == 'oauth2':
-                headers["Authorization"] = f"Bearer {connection['configuration']['token']}"
+                headers['Authorization'] = f"Bearer {connection['configuration']['token']}"
 
         if method == HttpMethod.GET:
-            response = requests.get(url=url,
-                                    headers=headers,
-                                    params=params,
-                                    timeout=self._config.timeout,
-                                    auth=auth,
-                                    allow_redirects=self._config.allow_redirects)
+            response = requests.get(
+                url=url,
+                headers=headers,
+                params=params,
+                timeout=self._config.timeout,
+                auth=auth,
+                allow_redirects=self._config.allow_redirects,
+            )
 
             content_json = None
             try:
@@ -243,50 +286,58 @@ class PromptlyHttpAPIProcessor(ApiProcessorInterface[HttpAPIProcessorInput, Http
             except:
                 pass
 
-            async_to_sync(self._output_stream.write)(HttpAPIProcessorOutput(
-                code=response.status_code,
-                is_ok=response.ok,
-                text=response.text,
-                content_json=content_json,
-                encoding=response.encoding,
-                cookies=response.cookies,
-                elapsed=response.elapsed.total_seconds(),
-                url=response.url,
-                headers=dict(response.headers),
-            ))
+            async_to_sync(self._output_stream.write)(
+                HttpAPIProcessorOutput(
+                    code=response.status_code,
+                    is_ok=response.ok,
+                    text=response.text,
+                    content_json=content_json,
+                    encoding=response.encoding,
+                    cookies=response.cookies,
+                    elapsed=response.elapsed.total_seconds(),
+                    url=response.url,
+                    headers=dict(response.headers),
+                ),
+            )
 
         elif method == HttpMethod.POST:
-            response = requests.post(url=url,
-                                     headers=headers,
-                                     params=params,
-                                     data=body_data,
-                                     timeout=self._config.timeout,
-                                     auth=auth,
-                                     allow_redirects=self._config.allow_redirects)
+            response = requests.post(
+                url=url,
+                headers=headers,
+                params=params,
+                data=body_data,
+                timeout=self._config.timeout,
+                auth=auth,
+                allow_redirects=self._config.allow_redirects,
+            )
             content_json = None
             try:
                 content_json = response.json()
             except:
                 pass
 
-            async_to_sync(self._output_stream.write)(HttpAPIProcessorOutput(
-                code=200,
-                is_ok=True,
-                text=response.text,
-                content_json=content_json,
-                encoding=response.encoding,
-                cookies=response.cookies,
-                elapsed=response.elapsed.total_seconds(),
-                url=response.url,
-                headers=dict(response.headers),
-            ))
+            async_to_sync(self._output_stream.write)(
+                HttpAPIProcessorOutput(
+                    code=200,
+                    is_ok=True,
+                    text=response.text,
+                    content_json=content_json,
+                    encoding=response.encoding,
+                    cookies=response.cookies,
+                    elapsed=response.elapsed.total_seconds(),
+                    url=response.url,
+                    headers=dict(response.headers),
+                ),
+            )
         elif method == HttpMethod.PUT:
-            response = requests.put(url=url,
-                                    params=params,
-                                    data=body_data,
-                                    timeout=self._config.timeout,
-                                    auth=None,
-                                    allow_redirects=self._config.allow_redirects)
+            response = requests.put(
+                url=url,
+                params=params,
+                data=body_data,
+                timeout=self._config.timeout,
+                auth=None,
+                allow_redirects=self._config.allow_redirects,
+            )
 
         else:
             raise NotImplementedError
@@ -301,7 +352,7 @@ def parse_openapi_spec(spec_dict, path, method) -> dict:
             name=parameter['name'],
             location=ParameterLocation(parameter['in']),
             required=parameter['required'],
-            description=parameter.get('description')
+            description=parameter.get('description'),
         )
 
     url = None
@@ -312,7 +363,7 @@ def parse_openapi_spec(spec_dict, path, method) -> dict:
     request_body = None
     protocol = None
 
-    for path_key, path_data in spec_dict["paths"].items():
+    for path_key, path_data in spec_dict['paths'].items():
         if path_key == path:
             path_info = path_data
             break
@@ -350,8 +401,11 @@ def parse_openapi_spec(spec_dict, path, method) -> dict:
     # Get request body
     if method_info.get('requestBody'):
         request_body = RequestBody(
-            parameters=[openapi_parameters_to_ParameterType(
-                parameter) for parameter in method_info['requestBody']['content']['application/json']['schema']['properties'].values()]
+            parameters=[
+                openapi_parameters_to_ParameterType(
+                parameter,
+                ) for parameter in method_info['requestBody']['content']['application/json']['schema']['properties'].values()
+            ],
         )
 
     return HttpAPIProcessorConfiguration(
@@ -359,5 +413,5 @@ def parse_openapi_spec(spec_dict, path, method) -> dict:
         method=HttpMethod(method.upper()),
         url=url,
         parameters=parameters,
-        request_body=request_body
+        request_body=request_body,
     ).dict()

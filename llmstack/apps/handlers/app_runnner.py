@@ -9,18 +9,20 @@ from llmstack.apps.app_session_utils import create_app_session
 from llmstack.apps.app_session_utils import create_app_session_data
 from llmstack.apps.app_session_utils import get_app_session
 from llmstack.apps.app_session_utils import get_app_session_data
-from llmstack.apps.integration_configs import DiscordIntegrationConfig, TwilioIntegrationConfig
+from llmstack.apps.integration_configs import DiscordIntegrationConfig
 from llmstack.apps.integration_configs import SlackIntegrationConfig
+from llmstack.apps.integration_configs import TwilioIntegrationConfig
 from llmstack.apps.integration_configs import WebIntegrationConfig
 from llmstack.apps.models import AppVisibility
+from llmstack.base.models import Profile
 from llmstack.common.utils.utils import get_location
 from llmstack.play.actor import ActorConfig
 from llmstack.play.actors.bookkeeping import BookKeepingActor
-from llmstack.play.actors.input import InputActor, InputRequest
+from llmstack.play.actors.input import InputActor
+from llmstack.play.actors.input import InputRequest
 from llmstack.play.actors.output import OutputActor
 from llmstack.play.coordinator import Coordinator
 from llmstack.play.utils import convert_template_vars_from_legacy_format
-from llmstack.base.models import Profile
 from llmstack.processors.providers.api_processors import ApiProcessorFactory
 
 logger = logging.getLogger(__name__)
@@ -127,7 +129,8 @@ class AppRunner:
             for processor, index in zip(processors, range(1, len(processors)+1)):
                 if 'processor_slug' not in processor or 'provider_slug' not in processor:
                     raise Exception(
-                        'processor_slug and provider_slug are required for each processor')
+                        'processor_slug and provider_slug are required for each processor',
+                    )
 
                 processor_cls = ApiProcessorFactory.get_api_processor(
                     processor['processor_slug'], processor['provider_slug'],
@@ -253,7 +256,8 @@ class AppRunner:
 
         template = convert_template_vars_from_legacy_format(
             self.app_data['output_template'].get(
-                'markdown', '') if self.app_data and 'output_template' in self.app_data else self.app.output_template.get('markdown', ''),
+                'markdown', '',
+            ) if self.app_data and 'output_template' in self.app_data else self.app.output_template.get('markdown', ''),
         )
 
         debug_data = []

@@ -7,16 +7,21 @@ from typing import Optional
 from pydantic import Field
 from pydantic import SecretStr
 
-from llmstack.common.blocks.data.source.s3_bucket import S3Bucket, S3BucketInput, S3BucketConfiguration
+from llmstack.base.models import Profile
+from llmstack.common.blocks.data.source.s3_bucket import S3Bucket
+from llmstack.common.blocks.data.source.s3_bucket import S3BucketConfiguration
+from llmstack.common.blocks.data.source.s3_bucket import S3BucketInput
 from llmstack.common.blocks.data.store.vectorstore import Document
 from llmstack.common.utils.splitter import CSVTextSplitter
+from llmstack.common.utils.splitter import SpacyTextSplitter
 from llmstack.common.utils.text_extract import extract_text_from_b64_json
 from llmstack.common.utils.text_extract import ExtraParams
-from llmstack.common.utils.splitter import SpacyTextSplitter
 from llmstack.common.utils.utils import validate_parse_data_uri
-from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem, DataSourceSchema, DataSourceProcessor, WEAVIATE_SCHEMA
+from llmstack.datasources.handlers.datasource_processor import DataSourceEntryItem
+from llmstack.datasources.handlers.datasource_processor import DataSourceProcessor
+from llmstack.datasources.handlers.datasource_processor import DataSourceSchema
+from llmstack.datasources.handlers.datasource_processor import WEAVIATE_SCHEMA
 from llmstack.datasources.models import DataSource
-from llmstack.base.models import Profile
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +130,8 @@ class S3BucketDataSource(DataSourceProcessor[S3BucketSchema]):
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key_secret,
                 region_name=region_name,
-            ))
+            ),
+        )
 
         data_source_entries = []
 
@@ -140,7 +146,8 @@ class S3BucketDataSource(DataSourceProcessor[S3BucketSchema]):
             mime_type, file_name, file_data = validate_parse_data_uri(data_url)
             data_source_entry = DataSourceEntryItem(
                 name=file_name, data={
-                    'mime_type': mime_type, 'file_name': file_name, 'file_data': file_data},
+                    'mime_type': mime_type, 'file_name': file_name, 'file_data': file_data,
+                },
             )
             data_source_entries.append(data_source_entry)
 
@@ -154,7 +161,8 @@ class S3BucketDataSource(DataSourceProcessor[S3BucketSchema]):
         file_text = extract_text_from_b64_json(
             data.data['mime_type'],
             data.data['file_data'], file_name=data.data['file_name'], extra_params=ExtraParams(
-                openai_key=self.openai_key),
+                openai_key=self.openai_key,
+            ),
         )
 
         if data.data['mime_type'] == 'text/csv':

@@ -8,11 +8,6 @@ from typing import Optional
 
 from pydantic import Field
 
-from llmstack.common.blocks.http import BearerTokenAuth
-from llmstack.common.blocks.http import HttpAPIProcessor
-from llmstack.common.blocks.http import HttpAPIProcessorInput
-from llmstack.common.blocks.http import HttpAPIProcessorOutput
-from llmstack.common.blocks.http import JsonBody
 from llmstack.common.blocks.base.processor import BaseConfiguration
 from llmstack.common.blocks.base.processor import BaseConfigurationType
 from llmstack.common.blocks.base.processor import BaseInput
@@ -20,8 +15,13 @@ from llmstack.common.blocks.base.processor import BaseInputEnvironment
 from llmstack.common.blocks.base.processor import BaseInputType
 from llmstack.common.blocks.base.processor import BaseOutput
 from llmstack.common.blocks.base.processor import BaseOutputType
-from llmstack.common.blocks.llm import LLMBaseProcessor
 from llmstack.common.blocks.base.processor import Schema
+from llmstack.common.blocks.http import BearerTokenAuth
+from llmstack.common.blocks.http import HttpAPIProcessor
+from llmstack.common.blocks.http import HttpAPIProcessorInput
+from llmstack.common.blocks.http import HttpAPIProcessorOutput
+from llmstack.common.blocks.http import JsonBody
+from llmstack.common.blocks.llm import LLMBaseProcessor
 
 DEFAULT_TIMEOUT = 120
 
@@ -105,12 +105,16 @@ class AzureOpenAIAPIProcessor(LLMBaseProcessor[AzureOpenAIAPIProcessorInput, Azu
             url=self._get_api_url(),
             method='POST',
             body=JsonBody(
-                json_body=(self._get_api_request_payload(
-                    input, configuration)),
+                json_body=(
+                    self._get_api_request_payload(
+                    input, configuration,
+                    )
+                ),
             ),
             headers={'api-key': f'{input.env.azure_openai_api_key}'},
             authorization=BearerTokenAuth(
-                token=input.env.azure_openai_api_key),
+                token=input.env.azure_openai_api_key,
+            ),
         )
 
         http_status_is_ok = True
@@ -135,7 +139,8 @@ class AzureOpenAIAPIProcessor(LLMBaseProcessor[AzureOpenAIAPIProcessorInput, Azu
             raise Exception(
                 process_azure_openai_error_response(
                     http_response.copy(
-                        update={'content_json': json.loads(error_message)}),
+                        update={'content_json': json.loads(error_message)},
+                    ),
                 ),
             )
 
@@ -148,12 +153,16 @@ class AzureOpenAIAPIProcessor(LLMBaseProcessor[AzureOpenAIAPIProcessorInput, Azu
             url=self._get_api_url(),
             method='POST',
             body=JsonBody(
-                json_body=(self._get_api_request_payload(
-                    input, configuration)),
+                json_body=(
+                    self._get_api_request_payload(
+                    input, configuration,
+                    )
+                ),
             ),
             headers={'api-key': f'{input.env.azure_openai_api_key}'},
             authorization=BearerTokenAuth(
-                token=input.env.azure_openai_api_key),
+                token=input.env.azure_openai_api_key,
+            ),
         )
 
         http_response = http_api_processor.process(
@@ -212,7 +221,8 @@ class OpenAICompletionsAPIProcessor(AzureOpenAIAPIProcessor[AzureOpenAICompletio
         )
         return AzureOpenAICompletionsAPIProcessorOutput(
             choices=choices, metadata=AzureOpenAIAPIProcessorOutputMetadata(
-                raw_response=json.loads(response.text)),
+                raw_response=json.loads(response.text),
+            ),
         )
 
 
@@ -289,7 +299,8 @@ class AzureOpenAIChatCompletionsAPIProcessor(AzureOpenAIAPIProcessor[AzureOpenAI
         )
         configuration_json = json.loads(
             configuration.json(
-                exclude={'base_url', 'deployment_name', 'api_version'}),
+                exclude={'base_url', 'deployment_name', 'api_version'},
+            ),
         )
 
         messages = []
@@ -310,13 +321,16 @@ class AzureOpenAIChatCompletionsAPIProcessor(AzureOpenAIAPIProcessor[AzureOpenAI
 
     def _transform_api_response(self, input: AzureOpenAIAPIProcessorInput, configuration: AzureOpenAIAPIProcessorConfiguration, response: HttpAPIProcessorOutput) -> AzureOpenAIChatCompletionsAPIProcessorOutput:
         choices = list(
-            map(lambda x: ChatMessage(**x['message']),
-                json.loads(response.text)['choices']),
+            map(
+                lambda x: ChatMessage(**x['message']),
+                json.loads(response.text)['choices'],
+            ),
         )
 
         return AzureOpenAIChatCompletionsAPIProcessorOutput(
             choices=choices, metadata=AzureOpenAIAPIProcessorOutputMetadata(
-                raw_response=json.loads(response.text)),
+                raw_response=json.loads(response.text),
+            ),
         )
 
     def _transform_streaming_api_response(self, input: AzureOpenAIAPIProcessorInput, configuration: AzureOpenAIAPIProcessorConfiguration, response: HttpAPIProcessorOutput) -> AzureOpenAIChatCompletionsAPIProcessorOutput:

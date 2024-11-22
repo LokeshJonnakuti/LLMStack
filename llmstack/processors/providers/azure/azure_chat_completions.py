@@ -1,16 +1,15 @@
 import json
 from enum import Enum
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import openai
 from asgiref.sync import async_to_sync
 from pydantic import Field
 
-from llmstack.processors.providers.api_processor_interface import (
-    CHAT_WIDGET_NAME,
-    ApiProcessorInterface,
-    ApiProcessorSchema,
-)
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import CHAT_WIDGET_NAME
 
 
 class ChatCompletionsModel(str, Enum):
@@ -106,7 +105,7 @@ class AzureChatCompletionsConfiguration(ApiProcessorSchema):
     )
     base_url: Optional[str] = Field(
         description='This value can be found in the Keys & Endpoint section when examining your resource from the Azure portal. An example endpoint is: https://docs-test-001.openai.azure.com/.',
-        advanced_parameter=False
+        advanced_parameter=False,
     )
     api_version: Optional[str] = Field(
         description='The API version to use', default='2023-05-15',
@@ -176,13 +175,16 @@ class AzureChatCompletions(ApiProcessorInterface[AzureChatCompletionsInput, Azur
         endpoint = self._config.base_url if self._config.base_url else self._env.get(
             'azure_openai_endpoint', None,
         )
-        client = openai.AzureOpenAI(azure_endpoint=endpoint if endpoint.startswith('https://') else f'https://{endpoint}.openai.azure.com',
-                                    api_key=azure_openai_api_key,
-                                    api_version=self._config.api_version,)
+        client = openai.AzureOpenAI(
+            azure_endpoint=endpoint if endpoint.startswith('https://') else f'https://{endpoint}.openai.azure.com',
+            api_key=azure_openai_api_key,
+            api_version=self._config.api_version,
+        )
 
         messages = []
         messages.append(
-            {'role': 'system', 'content': self._input.system_message})
+            {'role': 'system', 'content': self._input.system_message},
+        )
 
         if len(chat_history) > 0:
             for message in chat_history:
@@ -191,18 +193,23 @@ class AzureChatCompletions(ApiProcessorInterface[AzureChatCompletionsInput, Azur
         for message in self._input.messages:
             messages.append(json.loads(message.json()))
 
-        result_iter = client.chat.completions.create(messages=messages,
-                                                     model=self._config.deployment_name.value,
-                                                     temperature=self._config.temperature,
-                                                     max_tokens=self._config.max_tokens,
-                                                     stream=True)
+        result_iter = client.chat.completions.create(
+            messages=messages,
+            model=self._config.deployment_name.value,
+            temperature=self._config.temperature,
+            max_tokens=self._config.max_tokens,
+            stream=True,
+        )
 
         for data in result_iter:
             if data.object == 'chat.completion.chunk' and len(data.choices) > 0 and data.choices[0].delta and data.choices[0].delta.content:
-                async_to_sync(output_stream.write)(AzureChatCompletionsOutput(
-                    choices=list(
-                        map(lambda entry: ChatMessage(role=entry.delta.role, content=entry.delta.content), data.choices)),
-                ))
+                async_to_sync(output_stream.write)(
+                    AzureChatCompletionsOutput(
+                        choices=list(
+                            map(lambda entry: ChatMessage(role=entry.delta.role, content=entry.delta.content), data.choices),
+                        ),
+                    ),
+                )
         output = self._output_stream.finalize()
 
         # Update chat history
@@ -210,5 +217,6 @@ class AzureChatCompletions(ApiProcessorInterface[AzureChatCompletionsInput, Azur
             self._chat_history.append(message)
 
         self._chat_history.append(
-            {'role': 'assistant', 'content': output.choices[0].content})
+            {'role': 'assistant', 'content': output.choices[0].content},
+        )
         return output

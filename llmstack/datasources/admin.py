@@ -7,7 +7,7 @@ from .models import DataSourceType
 
 class DataSourceEntryAdmin(admin.ModelAdmin):
     search_fields = ['uuid', 'name', 'datasource__name']
-    
+
 
 class DataSourceAdmin(admin.ModelAdmin):
     search_fields = ['uuid', 'owner__email']

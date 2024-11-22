@@ -2,9 +2,10 @@ from flags import conditions
 from flags.sources import Condition
 from flags.state import flag_enabled
 
-from llmstack.apps.models import App, AppVisibility
-from llmstack.organizations.models import OrganizationSettings
 from .models import Profile
+from llmstack.apps.models import App
+from llmstack.apps.models import AppVisibility
+from llmstack.organizations.models import OrganizationSettings
 
 
 class FlagSource(object):
@@ -57,7 +58,7 @@ class FlagSource(object):
             ],
             'CAN_EXPORT_HISTORY': [
                 Condition('can_export_history', False),
-            ]
+            ],
         }
 
         return flags
