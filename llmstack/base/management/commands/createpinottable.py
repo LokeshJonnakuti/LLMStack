@@ -1,6 +1,5 @@
 import requests
 from django.core.management.base import BaseCommand
-
 from promptly_pinot_backend.tables import REALTIME_TABLES
 
 

@@ -1,14 +1,25 @@
 import json
 import logging
 from enum import Enum
-from typing import Generator, List, Optional
-
-from pydantic import BaseModel, Field, confloat, conint
-from llmstack.common.blocks.llm.localai import LocalAIChatCompletionsAPIProcessor, LocalAIChatCompletionsAPIProcessorConfiguration, LocalAIChatCompletionsAPIProcessorInput, LocalAIChatCompletionsAPIProcessorOutput
-from llmstack.processors.providers.api_processor_interface import CHAT_WIDGET_NAME, ApiProcessorInterface, ApiProcessorSchema
-from llmstack.common.blocks.llm.openai import FunctionCall as OpenAIFunctionCall, OpenAIAPIInputEnvironment
+from typing import Generator
+from typing import List
+from typing import Optional
 
 from asgiref.sync import async_to_sync
+from pydantic import BaseModel
+from pydantic import confloat
+from pydantic import conint
+from pydantic import Field
+
+from llmstack.common.blocks.llm.localai import LocalAIChatCompletionsAPIProcessor
+from llmstack.common.blocks.llm.localai import LocalAIChatCompletionsAPIProcessorConfiguration
+from llmstack.common.blocks.llm.localai import LocalAIChatCompletionsAPIProcessorInput
+from llmstack.common.blocks.llm.localai import LocalAIChatCompletionsAPIProcessorOutput
+from llmstack.common.blocks.llm.openai import FunctionCall as OpenAIFunctionCall
+from llmstack.common.blocks.llm.openai import OpenAIAPIInputEnvironment
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import CHAT_WIDGET_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -82,9 +93,11 @@ class ChatCompletionsOutput(ApiProcessorSchema):
 
 
 class ChatCompletionsConfiguration(ApiProcessorSchema):
-    base_url: Optional[str] = Field(description="Base URL")
-    model: str = Field(description="Model name", widget='customselect', advanced_parameter=False,
-                       options=['ggml-gpt4all-j'], default='ggml-gpt4all-j')
+    base_url: Optional[str] = Field(description='Base URL')
+    model: str = Field(
+        description='Model name', widget='customselect', advanced_parameter=False,
+        options=['ggml-gpt4all-j'], default='ggml-gpt4all-j',
+    )
     max_tokens: Optional[conint(ge=1, le=32000)] = Field(
         1024,
         description='The maximum number of tokens allowed for the generated answer. By default, the number of tokens the model can return will be (4096 - prompt tokens).\n',
@@ -97,7 +110,8 @@ class ChatCompletionsConfiguration(ApiProcessorSchema):
         advanced_parameter=False,
     )
     stream: Optional[bool] = Field(
-        default=False, description="Stream output", example=False)
+        default=False, description='Stream output', example=False,
+    )
     function_call: Optional[str] = Field(
         default=None,
         description='Controls how the model responds to function calls.',
@@ -123,19 +137,20 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionInput, ChatCompletions
 
     def process(self) -> dict:
         env = self._env
-        base_url = env.get("localai_base_url")
-        api_key = env.get("localai_api_key")
+        base_url = env.get('localai_base_url')
+        api_key = env.get('localai_api_key')
 
         if self._config.base_url:
             base_url = self._config.base_url
 
         if not base_url:
-            raise Exception("Base URL is not set")
+            raise Exception('Base URL is not set')
 
         system_message = self._input.system_message
 
         chat_messages = [
-            {"role": "system", "content": system_message}] if system_message else []
+            {'role': 'system', 'content': system_message},
+        ] if system_message else []
         for msg_entry in self._input.messages:
             chat_messages.append(json.loads(msg_entry.json()))
 
@@ -148,7 +163,8 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionInput, ChatCompletions
                         name=function.name,
                         description=function.description,
                         parameters=json.loads(
-                            function.parameters) if function.parameters is not None else {},
+                            function.parameters,
+                        ) if function.parameters is not None else {},
                     ),
                 )
 
@@ -168,13 +184,14 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionInput, ChatCompletions
                     max_tokens=self._config.max_tokens,
                     temperature=self._config.temperature,
                     stream=True,
-                    function_call=self._config.function_call
+                    function_call=self._config.function_call,
                 ).dict(),
             ).process_iter(localai_chat_completions_api_processor_input.dict())
 
             for result in result_iter:
                 async_to_sync(self._output_stream.write)(
-                    ChatCompletionsOutput(choices=result.choices))
+                    ChatCompletionsOutput(choices=result.choices),
+                )
         else:
             result: LocalAIChatCompletionsAPIProcessorOutput = LocalAIChatCompletionsAPIProcessor(
                 configuration=LocalAIChatCompletionsAPIProcessorConfiguration(
@@ -183,12 +200,13 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionInput, ChatCompletions
                     max_tokens=self._config.max_tokens,
                     temperature=self._config.temperature,
                     stream=False,
-                    function_call=self._config.function_call
+                    function_call=self._config.function_call,
                 ).dict(),
             ).process(localai_chat_completions_api_processor_input.dict())
 
             async_to_sync(self._output_stream.write)(
-                ChatCompletionsOutput(choices=result.choices))
+                ChatCompletionsOutput(choices=result.choices),
+            )
 
         output = self._output_stream.finalize()
         return output

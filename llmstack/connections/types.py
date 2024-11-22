@@ -1,8 +1,11 @@
 from enum import Enum
-from typing import Generic, Iterator, TypeVar
+from typing import Generic
+from typing import Iterator
+from typing import TypeVar
 
 from llmstack.common.utils.module_loader import get_all_sub_classes
-from llmstack.connections.models import Connection, ConnectionActivationInput
+from llmstack.connections.models import Connection
+from llmstack.connections.models import ConnectionActivationInput
 
 
 def get_connection_type_interface_subclasses():
@@ -20,7 +23,8 @@ def get_connection_type_interface_subclasses():
 
     for package in allowed_packages:
         subclasses_in_package = get_all_sub_classes(
-            package, ConnectionTypeInterface)
+            package, ConnectionTypeInterface,
+        )
 
         for subclass in subclasses_in_package:
             if subclass.__module__ not in excluded_packages:
@@ -30,7 +34,8 @@ def get_connection_type_interface_subclasses():
 
 
 ConnectionConfigurationSchemaType = TypeVar(
-    'ConnectionConfigurationSchemaType')
+    'ConnectionConfigurationSchemaType',
+)
 class ConnectionTypeInterface(Generic[ConnectionConfigurationSchemaType]):
     """Interface for connection types."""
     @staticmethod
@@ -48,11 +53,11 @@ class ConnectionTypeInterface(Generic[ConnectionConfigurationSchemaType]):
     @staticmethod
     def description() -> str:
         raise NotImplementedError
-    
+
     @staticmethod
     def connection_type():
         raise NotImplementedError
-    
+
     @staticmethod
     def metadata() -> dict:
         return {}

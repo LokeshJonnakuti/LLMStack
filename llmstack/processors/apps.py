@@ -3,7 +3,6 @@ import logging
 from django.apps import AppConfig
 from django.conf import settings
 
-
 from .providers.api_processor_interface import ApiProcessorInterface
 from llmstack.common.utils.module_loader import get_all_sub_classes
 
@@ -27,5 +26,5 @@ class ProcessorsConfig(AppConfig):
         # If this is collecstatic command, do not load the processor subclasses
         if 'collectstatic' in argv:
             return
-        logger.info("Initializing Processor subclasses")
+        logger.info('Initializing Processor subclasses')
         load_processor_subclasses()

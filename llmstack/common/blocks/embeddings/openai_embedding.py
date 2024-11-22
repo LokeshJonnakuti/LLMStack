@@ -16,8 +16,8 @@ from llmstack.common.blocks.base.processor import BaseInput
 from llmstack.common.blocks.base.processor import BaseInputType
 from llmstack.common.blocks.base.processor import BaseOutput
 from llmstack.common.blocks.base.processor import BaseOutputType
-from llmstack.common.blocks.base.processor import ProcessorInterface
 from llmstack.common.blocks.base.processor import CacheManager
+from llmstack.common.blocks.base.processor import ProcessorInterface
 from llmstack.common.blocks.base.processor import Schema
 from llmstack.common.utils.utils import retrier
 

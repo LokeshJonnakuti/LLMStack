@@ -1,5 +1,9 @@
 import unittest
-from llmstack.common.blocks.http import HttpAPIProcessor, HttpAPIProcessorInput, HttpAPIProcessorOutput, HttpAPIProcessorConfiguration
+
+from llmstack.common.blocks.http import HttpAPIProcessor
+from llmstack.common.blocks.http import HttpAPIProcessorConfiguration
+from llmstack.common.blocks.http import HttpAPIProcessorInput
+from llmstack.common.blocks.http import HttpAPIProcessorOutput
 
 
 class HttpAPIProcessorTestCase(unittest.TestCase):

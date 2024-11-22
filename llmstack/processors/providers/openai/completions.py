@@ -1,16 +1,18 @@
 import logging
+from enum import Enum
 from typing import List
 from typing import Optional
 from typing import Union
-import openai
 
+import openai
 from asgiref.sync import async_to_sync
 from pydantic import confloat
 from pydantic import conint
 from pydantic import Field
-from enum import Enum
 
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema, TEXT_WIDGET_NAME
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import TEXT_WIDGET_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +28,7 @@ class CompletionsModel(str, Enum):
 
     def __str__(self):
         return self.value
-    
+
 class CompletionsInput(ApiProcessorSchema):
     prompt: str = Field(default='', description='The prompt(s) to generate completions for, encoded as a string, array of strings, array of tokens, or array of token arrays.\n\nNote that <|endoftext|> is the document separator that the model sees during training, so if a prompt is not specified the model will generate as if from the beginning of a new document.')
 
@@ -111,7 +113,7 @@ class Completions(ApiProcessorInterface[CompletionsInput, CompletionsOutput, Com
     def provider_slug() -> str:
         return 'openai'
 
-    def process(self) -> dict:        
+    def process(self) -> dict:
         client = openai.OpenAI(api_key=self._env['openai_api_key'])
         result = client.completions.create(
             stream=True,
@@ -119,12 +121,13 @@ class Completions(ApiProcessorInterface[CompletionsInput, CompletionsOutput, Com
             prompt=self._input.prompt,
             max_tokens=self._config.max_tokens,
             temperature=self._config.temperature,
-            n=1, 
+            n=1,
         )
-        
+
         for data in result:
             async_to_sync(self._output_stream.write)(
-                CompletionsOutput(choices=list(map(lambda x: x.text, data.choices))))
+                CompletionsOutput(choices=list(map(lambda x: x.text, data.choices))),
+            )
 
         output = self._output_stream.finalize()
         return output

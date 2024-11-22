@@ -1,7 +1,7 @@
 import json
 import logging
-from typing import List
 from typing import Any
+from typing import List
 from typing import Optional
 
 import grpc
@@ -11,11 +11,13 @@ from pydantic import Field
 from stability_sdk import client
 
 from .utils import get_guidance_preset_enum
-from llmstack.common.utils.utils import get_key_or_raise
 from .utils import get_sampler_grpc_enum
 from .utils import GuidancePreset
 from .utils import Sampler
-from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface, ApiProcessorSchema, IMAGE_WIDGET_NAME
+from llmstack.common.utils.utils import get_key_or_raise
+from llmstack.processors.providers.api_processor_interface import ApiProcessorInterface
+from llmstack.processors.providers.api_processor_interface import ApiProcessorSchema
+from llmstack.processors.providers.api_processor_interface import IMAGE_WIDGET_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +117,8 @@ class ImageToImage(ApiProcessorInterface[ImageToImageInput, ImageToImageOutput, 
                 prompts.append(
                     generation.Prompt(
                         text=p, parameters=generation.PromptParameters(
-                            weight=1),
+                            weight=1,
+                        ),
                     ),
                 )
 
@@ -124,7 +127,8 @@ class ImageToImage(ApiProcessorInterface[ImageToImageInput, ImageToImageOutput, 
                 prompts.append(
                     generation.Prompt(
                         text=p, parameters=generation.PromptParameters(
-                            weight=-1),
+                            weight=-1,
+                        ),
                     ),
                 )
 
